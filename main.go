@@ -58,8 +58,8 @@ func getEsaConfig() EsaConfig {
 	}
 }
 
-// createHTTPClient は認証済みのHTTPクライアントを作成する
-func createHTTPClient(accessToken string) *http.Client {
+// createHTTPClient はHTTPクライアントを作成する
+func createHTTPClient() *http.Client {
 	return &http.Client{
 		Timeout: 10 * time.Second,
 	}
@@ -250,7 +250,7 @@ func submitDailyReport(ctx context.Context, request mcp.CallToolRequest) (*mcp.C
 		return nil, errors.New("ESA_TEAM_NAME または ESA_ACCESS_TOKEN が設定されていません")
 	}
 
-	client := createHTTPClient(esaConfig.AccessToken)
+	client := createHTTPClient()
 
 	// 日付ベースのカテゴリを生成
 	now := time.Now()
