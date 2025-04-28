@@ -282,31 +282,12 @@ func updatePost(client *http.Client, config EsaConfig, existingPost *EsaPost, ca
 	// リクエストボディの作成
 	type patchRequest struct {
 		Post struct {
-			Name     string   `json:"name"`
-			Category string   `json:"category"`
-			Tags     []string `json:"tags"`
-			BodyMd   string   `json:"body_md"`
-			Wip      bool     `json:"wip"`
+			BodyMd string `json:"body_md"`
+			Wip    bool   `json:"wip"`
 		} `json:"post"`
 	}
 
 	reqBody := patchRequest{}
-	reqBody.Post.Name = transformTitle(existingPost.Name, title)
-	reqBody.Post.Category = category
-
-	// タグをマージ（重複を除去）
-	allTags := make(map[string]bool)
-	for _, tag := range existingPost.Tags {
-		allTags[tag] = true
-	}
-	for _, tag := range tags {
-		allTags[tag] = true
-	}
-	var mergedTags []string
-	for tag := range allTags {
-		mergedTags = append(mergedTags, tag)
-	}
-	reqBody.Post.Tags = mergedTags
 
 	// テキストを追記（新しいテキストを上に）
 	if text != "" {
