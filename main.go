@@ -136,7 +136,11 @@ func createPost(client *http.Client, config EsaConfig, text string) (*EsaPost, e
 	reqBody.Post.Name = title
 	reqBody.Post.Category = category
 	reqBody.Post.Tags = tags
-	reqBody.Post.BodyMd = text
+
+	// 現在時刻をhh:mm形式で取得し、テキストの前に追加、その後に区切り線を追加
+	timePrefix := fmt.Sprintf("%02d:%02d", now.Hour(), now.Minute())
+	reqBody.Post.BodyMd = fmt.Sprintf("%s %s\n\n---", timePrefix, text)
+
 	reqBody.Post.Wip = false
 
 	// JSONに変換
@@ -193,7 +197,12 @@ func updatePost(client *http.Client, config EsaConfig, existingPost *EsaPost, te
 
 	// テキストを追記（新しいテキストを上に）
 	if text != "" {
-		reqBody.Post.BodyMd = text + "\n" + existingPost.BodyMd
+		// 現在時刻をhh:mm形式で取得
+		now := time.Now()
+		timePrefix := fmt.Sprintf("%02d:%02d", now.Hour(), now.Minute())
+
+		// 区切り線と時刻付きテキストを追記
+		reqBody.Post.BodyMd = fmt.Sprintf("%s %s\n\n---\n\n%s", timePrefix, text, existingPost.BodyMd)
 	} else {
 		reqBody.Post.BodyMd = existingPost.BodyMd
 	}
