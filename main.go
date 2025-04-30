@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/mark3labs/mcp-go/mcp"
@@ -46,6 +47,47 @@ type DailyReportResponse struct {
 	Success bool    `json:"success"`
 	Message string  `json:"message"`
 	Post    EsaPost `json:"post,omitempty"`
+}
+
+// debounce用の構造体
+type debounceEntry struct {
+	text      string
+	timestamp time.Time
+}
+
+// debounceを管理するマップとミューテックス
+var (
+	debounceMap   = make(map[string]debounceEntry)
+	debounceMutex sync.Mutex
+	debounceTime  = 10 * time.Second
+)
+
+// isDebounced は指定されたテキストが短時間内に処理済みかチェックする
+func isDebounced(text string) bool {
+	debounceMutex.Lock()
+	defer debounceMutex.Unlock()
+
+	if entry, exists := debounceMap[text]; exists {
+		if time.Since(entry.timestamp) < debounceTime {
+			// 10秒以内の同一テキスト入力
+			return true
+		}
+	}
+
+	// エントリを更新または追加
+	debounceMap[text] = debounceEntry{
+		text:      text,
+		timestamp: time.Now(),
+	}
+
+	// マップのクリーンアップ（古いエントリを削除）
+	for key, entry := range debounceMap {
+		if time.Since(entry.timestamp) > debounceTime*2 {
+			delete(debounceMap, key)
+		}
+	}
+
+	return false
 }
 
 // getEsaConfig は環境変数からesa.ioの設定を取得する
@@ -251,6 +293,11 @@ func submitDailyReport(ctx context.Context, request mcp.CallToolRequest) (*mcp.C
 	text, ok := request.Params.Arguments["text"].(string)
 	if !ok {
 		return nil, errors.New("text must be a string")
+	}
+
+	// debounceチェック - 同じテキストが短時間内に複数回送信されたら拒否
+	if isDebounced(text) {
+		return nil, errors.New("10秒以内に同じ内容の投稿が行われました。しばらく待ってから再試行してください")
 	}
 
 	// esa.ioの設定を取得
