@@ -293,12 +293,7 @@ func updatePost(client *http.Client, config EsaConfig, existingPost *EsaPost, te
 // 指定したprefixで始まる場合に、prefix自体と、その直後の連続する空白類（Unicodeホワイトスペース）だけを除去し、他は一切変更しない
 func stripPrefix(s string, prefix string) string {
 	if strings.HasPrefix(s, prefix) {
-		runes := []rune(s[len(prefix):])
-		idx := 0
-		for idx < len(runes) && unicode.IsSpace(runes[idx]) {
-			idx++
-		}
-		return string(runes[idx:])
+		return strings.TrimLeftFunc(s[len(prefix):], unicode.IsSpace)
 	}
 	return s
 }
