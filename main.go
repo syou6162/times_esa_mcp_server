@@ -8,8 +8,10 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 	"time"
+	"unicode"
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
@@ -288,12 +290,23 @@ func updatePost(client *http.Client, config EsaConfig, existingPost *EsaPost, te
 	return &post, nil
 }
 
+// 指定したprefixで始まる場合に、prefix自体と、その直後の連続する空白類（Unicodeホワイトスペース）だけを除去し、他は一切変更しない
+func stripPrefix(s string, prefix string) string {
+	if strings.HasPrefix(s, prefix) {
+		return strings.TrimLeftFunc(s[len(prefix):], unicode.IsSpace)
+	}
+	return s
+}
+
 func submitDailyReport(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	// パラメーターの取得
 	text, ok := request.Params.Arguments["text"].(string)
 	if !ok {
 		return nil, errors.New("text must be a string")
 	}
+
+	// #times-esa除去（prefix自体と直後の空白のみ除去、他は一切変更しない）
+	text = stripPrefix(text, "#times-esa")
 
 	// debounceチェック - 同じテキストが短時間内に複数回送信されたら拒否
 	if isDebounced(text) {
