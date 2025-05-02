@@ -20,6 +20,13 @@ var (
 	debounceTime  = 10 * time.Second
 )
 
+// テスト用にdebounceをリセットする関数
+func resetDebounce() {
+	debounceMutex.Lock()
+	defer debounceMutex.Unlock()
+	debounceMap = make(map[string]debounceEntry)
+}
+
 // isDebounced は指定されたテキストが短時間内に処理済みかチェックする
 func isDebounced(text string) bool {
 	debounceMutex.Lock()
