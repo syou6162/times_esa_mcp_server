@@ -81,6 +81,27 @@ func levenshteinDistance(s1, s2 string) int {
 	return matrix[s1Len][s2Len]
 }
 
+// テキスト類似度を計算する関数
+// 0.0〜1.0の値を返す（1.0は完全一致、0.0は完全に異なる）
+func textSimilarity(s1, s2 string) float64 {
+	// 同一テキストなら類似度1.0
+	if s1 == s2 {
+		return 1.0
+	}
+
+	maxLen := max(len(s1), len(s2))
+	if maxLen == 0 {
+		return 1.0 // 両方が空文字列の場合は完全一致
+	}
+
+	// 編集距離を計算
+	distance := levenshteinDistance(s1, s2)
+
+	// 距離から類似度へ変換（最大距離から差し引く）
+	// 距離が大きいほど類似度は低くなる
+	return 1.0 - float64(distance)/float64(maxLen)
+}
+
 // テスト用にdebounceをリセットする関数
 func resetDebounce() {
 	debounceMutex.Lock()
@@ -98,10 +119,12 @@ func SetDebounceConfig(duration time.Duration, similarityThreshold float64) {
 }
 
 // isDebounced は指定されたテキストが短時間内に処理済みかチェックする
+// テキストの完全一致だけでなく、高い類似度を持つテキストもデバウンスする
 func isDebounced(text string) bool {
 	debounceMutex.Lock()
 	defer debounceMutex.Unlock()
 
+	// 完全一致チェック
 	if entry, exists := debounceMap[text]; exists {
 		if time.Since(entry.timestamp) < debounceConfig.Duration {
 			// 設定時間以内の同一テキスト入力
@@ -109,7 +132,23 @@ func isDebounced(text string) bool {
 		}
 	}
 
-	// エントリを更新または追加
+	// 類似度チェック
+	for storedText, entry := range debounceMap {
+		if time.Since(entry.timestamp) < debounceConfig.Duration {
+			similarity := textSimilarity(text, storedText)
+			if similarity >= debounceConfig.SimilarityThreshold {
+				// 高い類似度を持つテキストが見つかった
+				// エントリを更新（新しいテキストで置き換え）
+				debounceMap[text] = debounceEntry{
+					text:      text,
+					timestamp: entry.timestamp, // 元の時間を維持
+				}
+				return true
+			}
+		}
+	}
+
+	// エントリを追加
 	debounceMap[text] = debounceEntry{
 		text:      text,
 		timestamp: time.Now(),
