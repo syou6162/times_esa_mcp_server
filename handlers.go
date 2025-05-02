@@ -24,7 +24,7 @@ func (f *DefaultHandlerFactory) CreateEsaClient() (EsaClientInterface, error) {
 }
 
 // submitDailyReport は日報を投稿するハンドラー（テスト可能な依存性注入バージョン）
-func submitDailyReport(ctx context.Context, request mcp.CallToolRequest, esaClient EsaClientInterface) (*mcp.CallToolResult, error) {
+func submitDailyReport(_ context.Context, request mcp.CallToolRequest, esaClient EsaClientInterface) (*mcp.CallToolResult, error) {
 	// パラメーターの取得
 	text, ok := request.Params.Arguments["text"].(string)
 	if !ok {
