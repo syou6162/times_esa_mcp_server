@@ -89,17 +89,24 @@ func textSimilarity(s1, s2 string) float64 {
 		return 1.0
 	}
 
-	maxLen := max(len(s1), len(s2))
-	if maxLen == 0 {
-		return 1.0 // 両方が空文字列の場合は完全一致
+	// どちらかが空文字列の場合
+	if len(s1) == 0 || len(s2) == 0 {
+		return 0.0
 	}
 
 	// 編集距離を計算
 	distance := levenshteinDistance(s1, s2)
 
-	// 距離から類似度へ変換（最大距離から差し引く）
-	// 距離が大きいほど類似度は低くなる
-	return 1.0 - float64(distance)/float64(maxLen)
+	// より厳格な類似度計算（完全に異なる場合は0に近くなるように調整）
+	maxAllowedDistance := max(len(s1), len(s2))
+
+	// 編集距離が最大許容値を超える場合は0とする
+	if distance >= maxAllowedDistance {
+		return 0.0
+	}
+
+	// 距離から類似度へ変換
+	return 1.0 - float64(distance)/float64(maxAllowedDistance)
 }
 
 // テスト用にdebounceをリセットする関数
@@ -124,6 +131,11 @@ func isDebounced(text string) bool {
 	debounceMutex.Lock()
 	defer debounceMutex.Unlock()
 
+	// 空テキストは常にデバウンスする（処理させない）
+	if text == "" {
+		return true
+	}
+
 	// 完全一致チェック
 	if entry, exists := debounceMap[text]; exists {
 		if time.Since(entry.timestamp) < debounceConfig.Duration {
@@ -134,16 +146,15 @@ func isDebounced(text string) bool {
 
 	// 類似度チェック
 	for storedText, entry := range debounceMap {
+		// 有効期限内のエントリのみチェック
 		if time.Since(entry.timestamp) < debounceConfig.Duration {
-			similarity := textSimilarity(text, storedText)
-			if similarity >= debounceConfig.SimilarityThreshold {
-				// 高い類似度を持つテキストが見つかった
-				// エントリを更新（新しいテキストで置き換え）
-				debounceMap[text] = debounceEntry{
-					text:      text,
-					timestamp: entry.timestamp, // 元の時間を維持
+			// 両方のテキストが意味のある長さを持つ場合のみ類似度を計算
+			if len(text) > 1 && len(storedText) > 1 {
+				similarity := textSimilarity(text, storedText)
+
+				if similarity >= debounceConfig.SimilarityThreshold {
+					return true
 				}
-				return true
 			}
 		}
 	}
