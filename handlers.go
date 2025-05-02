@@ -23,8 +23,8 @@ func (f *DefaultHandlerFactory) CreateEsaClient() (EsaClientInterface, error) {
 	return NewEsaClient(httpClient, config), nil
 }
 
-// submitDailyReport は日報を投稿するハンドラー（テスト可能な依存性注入バージョン）
-func submitDailyReport(_ context.Context, request mcp.CallToolRequest, esaClient EsaClientInterface) (*mcp.CallToolResult, error) {
+// submitDailyReportWithTime は日報を投稿するハンドラーの内部実装（時間指定可能）
+func submitDailyReportWithTime(_ context.Context, request mcp.CallToolRequest, esaClient EsaClientInterface, now time.Time) (*mcp.CallToolResult, error) {
 	// パラメーターの取得
 	text, ok := request.Params.Arguments["text"].(string)
 	if !ok {
@@ -40,7 +40,6 @@ func submitDailyReport(_ context.Context, request mcp.CallToolRequest, esaClient
 	}
 
 	// 日付ベースのカテゴリを生成
-	now := time.Now()
 	category := fmt.Sprintf("日報/%04d/%02d/%02d", now.Year(), now.Month(), now.Day())
 
 	// 既存の投稿を検索
@@ -78,6 +77,11 @@ func submitDailyReport(_ context.Context, request mcp.CallToolRequest, esaClient
 	}
 
 	return mcp.NewToolResultText(string(jsonBytes)), nil
+}
+
+// submitDailyReport は日報を投稿するハンドラー（テスト可能な依存性注入バージョン）
+func submitDailyReport(ctx context.Context, request mcp.CallToolRequest, esaClient EsaClientInterface) (*mcp.CallToolResult, error) {
+	return submitDailyReportWithTime(ctx, request, esaClient, time.Now())
 }
 
 // 後方互換性のためのラッパー
