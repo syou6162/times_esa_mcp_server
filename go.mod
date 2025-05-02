@@ -1,4 +1,4 @@
-module times_esa_mcp_server
+module github.com/syou6162/times_esa_mcp_server
 
 go 1.23.2
 
