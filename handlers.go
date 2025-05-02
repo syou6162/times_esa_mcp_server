@@ -10,7 +10,21 @@ import (
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
-func submitDailyReport(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// DefaultHandlerFactory は標準的なハンドラーを生成します
+type DefaultHandlerFactory struct{}
+
+// CreateEsaClient はesa.ioクライアントを生成します
+func (f *DefaultHandlerFactory) CreateEsaClient() (EsaClientInterface, error) {
+	config := ConfigFromEnv()
+	if config.TeamName == "" || config.AccessToken == "" {
+		return nil, errors.New("ESA_TEAM_NAME または ESA_ACCESS_TOKEN が設定されていません")
+	}
+	httpClient := NewHTTPClient(10 * time.Second)
+	return NewEsaClient(httpClient, config), nil
+}
+
+// submitDailyReport は日報を投稿するハンドラー（テスト可能な依存性注入バージョン）
+func submitDailyReport(ctx context.Context, request mcp.CallToolRequest, esaClient EsaClientInterface) (*mcp.CallToolResult, error) {
 	// パラメーターの取得
 	text, ok := request.Params.Arguments["text"].(string)
 	if !ok {
@@ -25,20 +39,12 @@ func submitDailyReport(ctx context.Context, request mcp.CallToolRequest) (*mcp.C
 		return nil, errors.New("10秒以内に同じ内容の投稿が行われました。しばらく待ってから再試行してください")
 	}
 
-	// esa.ioの設定を取得
-	esaConfig := getEsaConfig()
-	if esaConfig.TeamName == "" || esaConfig.AccessToken == "" {
-		return nil, errors.New("ESA_TEAM_NAME または ESA_ACCESS_TOKEN が設定されていません")
-	}
-
-	client := createHTTPClient()
-
 	// 日付ベースのカテゴリを生成
 	now := time.Now()
 	category := fmt.Sprintf("日報/%04d/%02d/%02d", now.Year(), now.Month(), now.Day())
 
 	// 既存の投稿を検索
-	existingPost, err := searchPostByCategory(client, esaConfig, category)
+	existingPost, err := esaClient.SearchPostByCategory(category)
 	if err != nil {
 		return nil, fmt.Errorf("投稿の検索に失敗しました: %w", err)
 	}
@@ -46,13 +52,13 @@ func submitDailyReport(ctx context.Context, request mcp.CallToolRequest) (*mcp.C
 	var post *EsaPost
 	if existingPost == nil {
 		// 新しい投稿を作成
-		post, err = createPost(client, esaConfig, text)
+		post, err = esaClient.CreatePost(text)
 		if err != nil {
 			return nil, fmt.Errorf("新規投稿の作成に失敗しました: %w", err)
 		}
 	} else {
 		// 既存の投稿を更新（テキストのみ）
-		post, err = updatePost(client, esaConfig, existingPost, text)
+		post, err = esaClient.UpdatePost(existingPost, text)
 		if err != nil {
 			return nil, fmt.Errorf("投稿の更新に失敗しました: %w", err)
 		}
@@ -72,4 +78,15 @@ func submitDailyReport(ctx context.Context, request mcp.CallToolRequest) (*mcp.C
 	}
 
 	return mcp.NewToolResultText(string(jsonBytes)), nil
+}
+
+// 後方互換性のためのラッパー
+func submitDailyReportLegacy(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	factory := &DefaultHandlerFactory{}
+	esaClient, err := factory.CreateEsaClient()
+	if err != nil {
+		return nil, err
+	}
+
+	return submitDailyReport(ctx, request, esaClient)
 }
