@@ -99,11 +99,16 @@ func textSimilarity(s1, s2 string) float64 {
 		return 0.0
 	}
 
+	// 文字列をruneのスライスに変換
+	runes1 := []rune(s1)
+	runes2 := []rune(s2)
+
 	// 編集距離を計算
 	distance := levenshteinDistance(s1, s2)
 
 	// より厳格な類似度計算（完全に異なる場合は0に近くなるように調整）
-	maxAllowedDistance := max(len(s1), len(s2))
+	// 文字数（rune数）で計算
+	maxAllowedDistance := max(len(runes1), len(runes2))
 
 	// 編集距離が最大許容値を超える場合は0とする
 	if distance >= maxAllowedDistance {
