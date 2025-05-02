@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"testing"
@@ -48,9 +49,8 @@ func TestSubmitDailyReport(t *testing.T) {
 				},
 			},
 		}
-
 		// テスト対象の関数を実行
-		result, err := submitDailyReportWithTime(nil, req, mockEsaClient, fixedTime)
+		result, err := submitDailyReportWithTime(context.TODO(), req, mockEsaClient, fixedTime)
 
 		// 検証
 		require.NoError(t, err, "submitDailyReport should not return an error")
@@ -107,7 +107,7 @@ func TestSubmitDailyReport(t *testing.T) {
 		}
 
 		// テスト対象の関数を実行
-		result, err := submitDailyReportWithTime(nil, req, mockEsaClient, fixedTime)
+		result, err := submitDailyReportWithTime(context.TODO(), req, mockEsaClient, fixedTime)
 
 		// 検証
 		require.NoError(t, err, "submitDailyReport should not return an error")
@@ -147,9 +147,8 @@ func TestSubmitDailyReport(t *testing.T) {
 				},
 			},
 		}
-
 		// テスト対象の関数を実行
-		_, err := submitDailyReportWithTime(nil, req, mockEsaClient, fixedTime)
+		_, err := submitDailyReportWithTime(context.TODO(), req, mockEsaClient, fixedTime)
 
 		// エラーが返ることを検証
 		assert.Error(t, err)
@@ -192,7 +191,7 @@ func TestSubmitDailyReport(t *testing.T) {
 		}
 
 		// テスト対象の関数を実行
-		result, err := submitDailyReportWithTime(nil, req, mockEsaClient, fixedTime)
+		result, err := submitDailyReportWithTime(context.TODO(), req, mockEsaClient, fixedTime)
 
 		// 検証
 		require.NoError(t, err)
@@ -223,7 +222,7 @@ func TestSubmitDailyReport(t *testing.T) {
 		}
 
 		// テスト対象の関数を実行
-		_, err := submitDailyReportWithTime(nil, req, mockEsaClient, fixedTime)
+		_, err := submitDailyReportWithTime(context.TODO(), req, mockEsaClient, fixedTime)
 
 		// エラーが返ることを検証
 		assert.Error(t, err)
