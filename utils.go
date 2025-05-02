@@ -24,7 +24,7 @@ var (
 	debounceMap    = make(map[string]debounceEntry)
 	debounceMutex  sync.Mutex
 	debounceConfig = DebounceConfig{
-		Duration:            10 * time.Second,
+		Duration:            300 * time.Second,
 		SimilarityThreshold: 0.9, // デフォルトは90%以上の類似度でデバウンス
 	}
 )
