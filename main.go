@@ -22,8 +22,8 @@ func main() {
 		),
 	)
 
-	// ツールの登録
-	s.AddTool(timesEsaTool, submitDailyReport)
+	// ツールの登録（後方互換性のあるラッパー関数を使用）
+	s.AddTool(timesEsaTool, submitDailyReportLegacy)
 
 	if err := server.ServeStdio(s); err != nil {
 		fmt.Printf("Server error: %v\n", err)
