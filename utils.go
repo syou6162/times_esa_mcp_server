@@ -31,9 +31,14 @@ var (
 
 // レーベンシュタイン距離を計算する関数
 // s1, s2の2つの文字列間の編集距離を返す
+// マルチバイト文字（日本語など）を正しく処理するためにrune単位で計算
 func levenshteinDistance(s1, s2 string) int {
-	s1Len := len(s1)
-	s2Len := len(s2)
+	// 文字列をrune（Unicode文字）のスライスに変換
+	runes1 := []rune(s1)
+	runes2 := []rune(s2)
+
+	s1Len := len(runes1)
+	s2Len := len(runes2)
 
 	// 最適化: どちらかが空文字列なら、もう一方の長さが距離
 	if s1Len == 0 {
@@ -66,7 +71,7 @@ func levenshteinDistance(s1, s2 string) int {
 	for i := 1; i <= s1Len; i++ {
 		for j := 1; j <= s2Len; j++ {
 			cost := 1
-			if s1[i-1] == s2[j-1] {
+			if runes1[i-1] == runes2[j-1] {
 				cost = 0
 			}
 			// Go 1.21の標準min関数を使用
