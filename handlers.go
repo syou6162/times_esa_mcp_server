@@ -36,7 +36,9 @@ func submitDailyReportWithTime(_ context.Context, request mcp.CallToolRequest, e
 
 	// debounceチェック - 同じテキストが短時間内に複数回送信されたら拒否
 	if isDebounced(text) {
-		return nil, errors.New("10秒以内に同じ内容の投稿が行われました。しばらく待ってから再試行してください")
+		// デバウンス時間を秒単位でメッセージに含める
+		debounceSeconds := int(debounceConfig.Duration.Seconds())
+		return nil, fmt.Errorf("%d秒以内に同じ内容の投稿が行われました。しばらく待ってから再試行してください", debounceSeconds)
 	}
 
 	// 日付ベースのカテゴリを生成
