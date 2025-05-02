@@ -62,7 +62,7 @@ func TestStripPrefix(t *testing.T) {
 
 func TestIsDebounced(t *testing.T) {
 	// テスト開始時にdebounceMapをリセット
-	debounceMap = make(map[string]debounceEntry)
+	resetDebounce()
 
 	// ケース1: 初回呼び出し - debounceされるべきでない
 	text := "test message"
@@ -83,10 +83,10 @@ func TestIsDebounced(t *testing.T) {
 
 	// ケース4: debounce時間経過後の同じテキスト
 	// 本来のテストでは実際に待つ必要があるが、テスト時間短縮のために
-	// 一時的にdebounceTimeを短く設定する
-	originalDebounceTime := debounceTime
-	debounceTime = 10 * time.Millisecond
-	defer func() { debounceTime = originalDebounceTime }()
+	// 一時的にdebounceConfigのDurationを短く設定する
+	originalDuration := debounceConfig.Duration
+	SetDebounceConfig(10*time.Millisecond, debounceConfig.SimilarityThreshold)
+	defer func() { SetDebounceConfig(originalDuration, debounceConfig.SimilarityThreshold) }()
 
 	time.Sleep(20 * time.Millisecond) // debounce時間より長く待つ
 
