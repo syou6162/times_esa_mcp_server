@@ -18,6 +18,48 @@ VS CodeのCopilot Agentは開発をサポートする強力なツールであり
 - **既存日報対応**: 同日の日報が既に存在する場合は上部に内容を追記
 - **重複投稿防止**: テキスト類似度を考慮したデバウンス機能を実装
 
+## 利用方法
+
+### インストール
+
+以下のコマンドでMCPサーバーをインストールできます：
+
+```sh
+go install github.com/syou6162/times_esa_mcp_server
+```
+
+### 環境変数の設定
+
+以下の環境変数を設定する必要があります：
+
+```sh
+export ESA_TEAM_NAME=your_team
+export ESA_ACCESS_TOKEN=your_token
+```
+
+**注意**: ESA_ACCESS_TOKENには読み取り(read)と書き込み(write)の両方の権限が必要です。esa.ioの設定画面からアクセストークンを生成する際に、適切な権限を付与してください。
+
+### VS Code設定
+
+VS Codeでこのツールを使用するには、`settings.json`に以下の設定を追加してください：
+
+```json
+{
+    "mcp": {
+        "servers": {
+            "times-esa-mcp-server": {
+                "command": "direnv",
+                "args": [
+                    "exec",
+                    "${env:HOME}",
+                    "${env:HOME}/go/bin/times_esa_mcp_server"
+                ]
+            }
+        }
+    }
+}
+```
+
 ## 利用可能なコマンド
 
 - **#times-esa**: テキストパラメータを受け取り、日報として投稿
