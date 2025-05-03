@@ -56,12 +56,12 @@ VS Codeでこのツールを使用するには、`settings.json`に以下の設�
     "mcp": {
         "servers": {
             "times-esa-mcp-server": {
-                "command": "direnv",
-                "args": [
-                    "exec",
-                    "${env:HOME}",
-                    "${env:HOME}/go/bin/times_esa_mcp_server"
-                ]
+                "command": "${env:HOME}/go/bin/times_esa_mcp_server",
+                "args": [],
+                "env": {
+                    "ESA_TEAM_NAME": "YOUR_TEAM_NAME",
+                    "ESA_ACCESS_TOKEN": "YOUR_ACCESS_TOKEN"
+                },
             }
         }
     }
