@@ -3,7 +3,7 @@ module github.com/syou6162/times_esa_mcp_server
 go 1.23.2
 
 require (
-	github.com/mark3labs/mcp-go v0.24.1
+	github.com/mark3labs/mcp-go v0.26.0
 	github.com/stretchr/testify v1.10.0
 )
 
