@@ -12,6 +12,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func newCallToolRequest(text any) mcp.CallToolRequest {
+	req := mcp.CallToolRequest{}
+	req.Params.Arguments = map[string]any{
+		"text": text,
+	}
+	return req
+}
+
 func TestSubmitDailyReport(t *testing.T) {
 	// テスト用の現在時刻を固定
 	fixedTime := time.Date(2025, 5, 3, 13, 0, 0, 0, time.Local)
@@ -36,19 +44,7 @@ func TestSubmitDailyReport(t *testing.T) {
 		mockEsaClient.EXPECT().CreatePost(testText).Return(mockPost, nil)
 
 		// リクエスト作成
-		req := mcp.CallToolRequest{
-			Params: struct {
-				Name      string                 `json:"name"`
-				Arguments map[string]interface{} `json:"arguments,omitempty"`
-				Meta      *struct {
-					ProgressToken mcp.ProgressToken `json:"progressToken,omitempty"`
-				} `json:"_meta,omitempty"`
-			}{
-				Arguments: map[string]interface{}{
-					"text": testText,
-				},
-			},
-		}
+		req := newCallToolRequest(testText)
 		// テスト対象の関数を実行
 		result, err := submitDailyReportWithTime(context.TODO(), req, mockEsaClient, fixedTime)
 
@@ -92,19 +88,7 @@ func TestSubmitDailyReport(t *testing.T) {
 		mockEsaClient.EXPECT().UpdatePost(existingPost, testText).Return(updatedPost, nil)
 
 		// リクエスト作成
-		req := mcp.CallToolRequest{
-			Params: struct {
-				Name      string                 `json:"name"`
-				Arguments map[string]interface{} `json:"arguments,omitempty"`
-				Meta      *struct {
-					ProgressToken mcp.ProgressToken `json:"progressToken,omitempty"`
-				} `json:"_meta,omitempty"`
-			}{
-				Arguments: map[string]interface{}{
-					"text": testText,
-				},
-			},
-		}
+		req := newCallToolRequest(testText)
 
 		// テスト対象の関数を実行
 		result, err := submitDailyReportWithTime(context.TODO(), req, mockEsaClient, fixedTime)
@@ -134,19 +118,7 @@ func TestSubmitDailyReport(t *testing.T) {
 		mockEsaClient.EXPECT().SearchPostByCategory("日報/2025/05/03").Return(nil, errors.New("API接続エラー"))
 
 		// リクエスト作成
-		req := mcp.CallToolRequest{
-			Params: struct {
-				Name      string                 `json:"name"`
-				Arguments map[string]interface{} `json:"arguments,omitempty"`
-				Meta      *struct {
-					ProgressToken mcp.ProgressToken `json:"progressToken,omitempty"`
-				} `json:"_meta,omitempty"`
-			}{
-				Arguments: map[string]interface{}{
-					"text": "テスト内容",
-				},
-			},
-		}
+		req := newCallToolRequest("テスト内容")
 		// テスト対象の関数を実行
 		_, err := submitDailyReportWithTime(context.TODO(), req, mockEsaClient, fixedTime)
 
@@ -176,19 +148,7 @@ func TestSubmitDailyReport(t *testing.T) {
 		mockEsaClient.EXPECT().CreatePost(expectedText).Return(mockPost, nil)
 
 		// リクエスト作成
-		req := mcp.CallToolRequest{
-			Params: struct {
-				Name      string                 `json:"name"`
-				Arguments map[string]interface{} `json:"arguments,omitempty"`
-				Meta      *struct {
-					ProgressToken mcp.ProgressToken `json:"progressToken,omitempty"`
-				} `json:"_meta,omitempty"`
-			}{
-				Arguments: map[string]interface{}{
-					"text": inputText,
-				},
-			},
-		}
+		req := newCallToolRequest(inputText)
 
 		// テスト対象の関数を実行
 		result, err := submitDailyReportWithTime(context.TODO(), req, mockEsaClient, fixedTime)
@@ -207,19 +167,7 @@ func TestSubmitDailyReport(t *testing.T) {
 		mockEsaClient := NewMockEsaClientInterface(t)
 
 		// text引数が文字列でない場合
-		req := mcp.CallToolRequest{
-			Params: struct {
-				Name      string                 `json:"name"`
-				Arguments map[string]interface{} `json:"arguments,omitempty"`
-				Meta      *struct {
-					ProgressToken mcp.ProgressToken `json:"progressToken,omitempty"`
-				} `json:"_meta,omitempty"`
-			}{
-				Arguments: map[string]interface{}{
-					"text": 123, // 文字列ではなく数値
-				},
-			},
-		}
+		req := newCallToolRequest(123) // 文字列ではなく数値
 
 		// テスト対象の関数を実行
 		_, err := submitDailyReportWithTime(context.TODO(), req, mockEsaClient, fixedTime)
