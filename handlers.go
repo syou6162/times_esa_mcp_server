@@ -28,12 +28,7 @@ func submitDailyReportWithTime(_ context.Context, request mcp.CallToolRequest, e
 	// パラメーターの取得
 	text, err := request.RequireString("text")
 	if err != nil {
-		if errors.Is(err, mcp.ErrParameterMissing) {
-			return nil, fmt.Errorf("text parameter is missing: %w", err)
-		} else if errors.Is(err, mcp.ErrParameterTypeMismatch) {
-			return nil, fmt.Errorf("text parameter must be a string: %w", err)
-		}
-		return nil, fmt.Errorf("unexpected error with text parameter: %w", err)
+		return nil, fmt.Errorf("text parameter is required: %w", err)
 	}
 
 	// #times-esa除去（prefix自体と直後の空白のみ除去、他は一切変更しない）
