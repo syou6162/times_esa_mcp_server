@@ -181,6 +181,6 @@ func TestSubmitDailyReport(t *testing.T) {
 
 		// エラーが返ることを検証
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "text must be a string")
+		assert.Contains(t, err.Error(), "text parameter is required")
 	})
 }
