@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -191,4 +192,12 @@ func stripPrefix(s string, prefix string) string {
 		return strings.TrimLeftFunc(s[len(prefix):], unicode.IsSpace)
 	}
 	return s
+}
+
+// GenerateTimestampWithAnchor は時刻をアンカーリンク付きで生成する
+// 例: <a id="1234" href="#1234">12:34</a>
+func GenerateTimestampWithAnchor(t time.Time) string {
+	timeStr := fmt.Sprintf("%02d:%02d", t.Hour(), t.Minute())
+	anchorID := fmt.Sprintf("%02d%02d", t.Hour(), t.Minute())
+	return fmt.Sprintf("<a id=\"%s\" href=\"#%s\">%s</a>", anchorID, anchorID, timeStr)
 }
