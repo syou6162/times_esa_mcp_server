@@ -28,7 +28,7 @@ func TestSubmitDailyReport(t *testing.T) {
 		mockPost := &EsaPost{
 			Number: 123,
 			Name:   "テスト日報",
-			BodyMd: "13:00 テスト投稿内容\n\n---",
+			BodyMd: "<a id=\"1300\" href=\"#1300\">13:00</a> テスト投稿内容\n\n---",
 		}
 
 		// モックの振る舞いを設定
@@ -70,12 +70,12 @@ func TestSubmitDailyReport(t *testing.T) {
 		existingPost := &EsaPost{
 			Number: 123,
 			Name:   "テスト日報",
-			BodyMd: "10:00 既存の内容\n\n---",
+			BodyMd: "<a id=\"1000\" href=\"#1000\">10:00</a> 既存の内容\n\n---",
 		}
 		updatedPost := &EsaPost{
 			Number: 123,
 			Name:   "テスト日報",
-			BodyMd: "13:00 テスト追記内容\n\n---\n\n10:00 既存の内容\n\n---",
+			BodyMd: "<a id=\"1300\" href=\"#1300\">13:00</a> テスト追記内容\n\n---\n\n<a id=\"1000\" href=\"#1000\">10:00</a> 既存の内容\n\n---",
 		}
 
 		// モックの振る舞いを設定
@@ -141,7 +141,7 @@ func TestSubmitDailyReport(t *testing.T) {
 		mockPost := &EsaPost{
 			Number: 123,
 			Name:   "テスト日報",
-			BodyMd: "13:00 テスト投稿内容\n\n---",
+			BodyMd: "<a id=\"1300\" href=\"#1300\">13:00</a> テスト投稿内容\n\n---",
 		}
 
 		// モックの振る舞いを設定

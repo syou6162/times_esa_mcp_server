@@ -136,8 +136,8 @@ func (c *EsaClient) CreatePost(text string) (*EsaPost, error) {
 	reqBody.Post.Category = category
 	reqBody.Post.Tags = tags
 
-	// 現在時刻をhh:mm形式で取得し、テキストの前に追加、その後に区切り線を追加
-	timePrefix := fmt.Sprintf("%02d:%02d", now.Hour(), now.Minute())
+	// 現在時刻をアンカーリンク付きで取得し、テキストの前に追加、その後に区切り線を追加
+	timePrefix := GenerateTimestampWithAnchor(now)
 	reqBody.Post.BodyMd = fmt.Sprintf("%s %s\n\n---", timePrefix, text)
 
 	reqBody.Post.Wip = false
@@ -196,9 +196,9 @@ func (c *EsaClient) UpdatePost(existingPost *EsaPost, text string) (*EsaPost, er
 
 	// テキストを追記（新しいテキストを上に）
 	if text != "" {
-		// 現在時刻をhh:mm形式で取得
+		// 現在時刻をアンカーリンク付きで取得
 		now := time.Now()
-		timePrefix := fmt.Sprintf("%02d:%02d", now.Hour(), now.Minute())
+		timePrefix := GenerateTimestampWithAnchor(now)
 
 		// 区切り線と時刻付きテキストを追記
 		reqBody.Post.BodyMd = fmt.Sprintf("%s %s\n\n---\n\n%s", timePrefix, text, existingPost.BodyMd)
