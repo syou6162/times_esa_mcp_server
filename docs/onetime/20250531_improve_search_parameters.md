@@ -61,7 +61,7 @@ type SearchOption func(*searchConfig)
 
 func WithCategory(category string) SearchOption
 func WithTags(tags ...string) SearchOption
-func WithDateRange(from, to time.Time) SearchOption
+func WithDateRange(field string, from, to time.Time) SearchOption
 ```
 - 利点: 
   - Go言語らしいイディオム
@@ -97,13 +97,13 @@ type SearchOption func(*searchConfig)
 ```go
 func WithCategory(category string) SearchOption {
     return func(c *searchConfig) {
-        c.query += fmt.Sprintf(" category:%s", category)
+        c.categoryQuery = fmt.Sprintf("category:%s", category)
     }
 }
 
 func WithCategoryExact(category string) SearchOption {
     return func(c *searchConfig) {
-        c.query += fmt.Sprintf(" on:%s", category)
+        c.categoryQuery = fmt.Sprintf("on:%s", category)
     }
 }
 

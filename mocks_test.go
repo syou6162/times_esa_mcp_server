@@ -179,7 +179,13 @@ func (_mock *MockEsaClientInterface) UpdatePost(existingPost *EsaPost, text stri
 
 // Search provides a mock function for the type MockEsaClientInterface
 func (_mock *MockEsaClientInterface) Search(options ...SearchOption) (*EsaSearchResult, error) {
-	ret := _mock.Called(options)
+	_va := make([]interface{}, len(options))
+	for _i := range options {
+		_va[_i] = options[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, _va...)
+	ret := _mock.Called(_ca...)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Search")
@@ -218,7 +224,13 @@ func (_e *MockEsaClientInterface_Expecter) Search(options interface{}) *MockEsaC
 
 func (_c *MockEsaClientInterface_Search_Call) Run(run func(options ...SearchOption)) *MockEsaClientInterface_Search_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].([]SearchOption)...)
+		variadicArgs := make([]SearchOption, len(args))
+		for i, a := range args {
+			if a != nil {
+				variadicArgs[i] = a.(SearchOption)
+			}
+		}
+		run(variadicArgs...)
 	})
 	return _c
 }

@@ -15,7 +15,7 @@ import (
 
 // buildTestURL はテスト用のAPIエンドポイントURLを構築する
 func buildTestURL(teamName string, queryParams string) string {
-	baseURL := fmt.Sprintf("%s%s", esaAPIBaseURL, fmt.Sprintf(esaPostsEndpoint, teamName))
+	baseURL := fmt.Sprintf("%s"+esaPostsEndpoint, esaAPIBaseURL, teamName)
 	if queryParams != "" {
 		return baseURL + "?" + queryParams
 	}
