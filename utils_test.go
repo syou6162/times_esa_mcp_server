@@ -295,3 +295,42 @@ func TestLevenshteinDistance(t *testing.T) {
 		})
 	}
 }
+
+// GenerateTimestampWithAnchor関数のテスト
+func TestGenerateTimestampWithAnchor(t *testing.T) {
+	testCases := []struct {
+		name     string
+		time     time.Time
+		expected string
+	}{
+		{
+			name:     "朝の時刻",
+			time:     time.Date(2024, 1, 1, 9, 30, 0, 0, time.UTC),
+			expected: `<a id="0930" href="#0930">09:30</a>`,
+		},
+		{
+			name:     "午後の時刻",
+			time:     time.Date(2024, 1, 1, 15, 45, 0, 0, time.UTC),
+			expected: `<a id="1545" href="#1545">15:45</a>`,
+		},
+		{
+			name:     "深夜の時刻",
+			time:     time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC),
+			expected: `<a id="0000" href="#0000">00:00</a>`,
+		},
+		{
+			name:     "同じ分の異なる秒",
+			time:     time.Date(2024, 1, 1, 12, 34, 56, 0, time.UTC),
+			expected: `<a id="1234" href="#1234">12:34</a>`,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := GenerateTimestampWithAnchor(tc.time)
+			if result != tc.expected {
+				t.Errorf("期待値: %q, 実際: %q", tc.expected, result)
+			}
+		})
+	}
+}
