@@ -26,9 +26,9 @@ func (f *DefaultHandlerFactory) CreateEsaClient() (EsaClientInterface, error) {
 // submitDailyReportWithTime は日報を投稿するハンドラーの内部実装（時間指定可能）
 func submitDailyReportWithTime(_ context.Context, request mcp.CallToolRequest, esaClient EsaClientInterface, now time.Time) (*mcp.CallToolResult, error) {
 	// パラメーターの取得
-	text, ok := request.Params.Arguments["text"].(string)
-	if !ok {
-		return nil, errors.New("text must be a string")
+	text, err := request.RequireString("text")
+	if err != nil {
+		return nil, fmt.Errorf("text parameter is required: %w", err)
 	}
 
 	// #times-esa除去（prefix自体と直後の空白のみ除去、他は一切変更しない）
