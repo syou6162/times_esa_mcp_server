@@ -177,6 +177,62 @@ func (_mock *MockEsaClientInterface) UpdatePost(existingPost *EsaPost, text stri
 	return r0, r1
 }
 
+// Search provides a mock function for the type MockEsaClientInterface
+func (_mock *MockEsaClientInterface) Search(options ...SearchOption) (*EsaSearchResult, error) {
+	ret := _mock.Called(options)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Search")
+	}
+
+	var r0 *EsaSearchResult
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(...SearchOption) (*EsaSearchResult, error)); ok {
+		return returnFunc(options...)
+	}
+	if returnFunc, ok := ret.Get(0).(func(...SearchOption) *EsaSearchResult); ok {
+		r0 = returnFunc(options...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*EsaSearchResult)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(...SearchOption) error); ok {
+		r1 = returnFunc(options...)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockEsaClientInterface_Search_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Search'
+type MockEsaClientInterface_Search_Call struct {
+	*mock.Call
+}
+
+// Search is a helper method to define mock.On call
+//   - options
+func (_e *MockEsaClientInterface_Expecter) Search(options interface{}) *MockEsaClientInterface_Search_Call {
+	return &MockEsaClientInterface_Search_Call{Call: _e.mock.On("Search", options)}
+}
+
+func (_c *MockEsaClientInterface_Search_Call) Run(run func(options ...SearchOption)) *MockEsaClientInterface_Search_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].([]SearchOption)...)
+	})
+	return _c
+}
+
+func (_c *MockEsaClientInterface_Search_Call) Return(result *EsaSearchResult, err error) *MockEsaClientInterface_Search_Call {
+	_c.Call.Return(result, err)
+	return _c
+}
+
+func (_c *MockEsaClientInterface_Search_Call) RunAndReturn(run func(...SearchOption) (*EsaSearchResult, error)) *MockEsaClientInterface_Search_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // MockEsaClientInterface_UpdatePost_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdatePost'
 type MockEsaClientInterface_UpdatePost_Call struct {
 	*mock.Call
