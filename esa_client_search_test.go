@@ -13,6 +13,15 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+// buildTestURL はテスト用のAPIエンドポイントURLを構築する
+func buildTestURL(teamName string, queryParams string) string {
+	baseURL := fmt.Sprintf("%s%s", esaAPIBaseURL, fmt.Sprintf(esaPostsEndpoint, teamName))
+	if queryParams != "" {
+		return baseURL + "?" + queryParams
+	}
+	return baseURL
+}
+
 // TestSearch_URLConstruction はSearchメソッドが正しいURLを構築することを検証する
 func TestSearch_URLConstruction(t *testing.T) {
 	tests := []struct {
@@ -24,8 +33,8 @@ func TestSearch_URLConstruction(t *testing.T) {
 		{
 			name:    "基本的な検索（オプションなし）",
 			options: []SearchOption{},
-			expectedURL: "https://api.esa.io/v1/teams/test-team/posts?" +
-				"order=desc&page=1&per_page=20&sort=updated",
+			expectedURL: buildTestURL("test-team",
+				"order=desc&page=1&per_page=20&sort=updated"),
 			expectedHeaders: map[string]string{
 				"Authorization": "Bearer test-token",
 			},
@@ -35,8 +44,8 @@ func TestSearch_URLConstruction(t *testing.T) {
 			options: []SearchOption{
 				WithCategory("日報/2024/12"),
 			},
-			expectedURL: "https://api.esa.io/v1/teams/test-team/posts?" +
-				"order=desc&page=1&per_page=20&q=category%3A%E6%97%A5%E5%A0%B1%2F2024%2F12&sort=updated",
+			expectedURL: buildTestURL("test-team",
+				"order=desc&page=1&per_page=20&q=category%3A%E6%97%A5%E5%A0%B1%2F2024%2F12&sort=updated"),
 			expectedHeaders: map[string]string{
 				"Authorization": "Bearer test-token",
 			},
@@ -48,8 +57,8 @@ func TestSearch_URLConstruction(t *testing.T) {
 				WithTags("golang", "mcp"),
 				WithPagination(2, 50),
 			},
-			expectedURL: "https://api.esa.io/v1/teams/test-team/posts?" +
-				"order=desc&page=2&per_page=50&q=category%3A%E6%97%A5%E5%A0%B1+tag%3Agolang+tag%3Amcp&sort=updated",
+			expectedURL: buildTestURL("test-team",
+				"order=desc&page=2&per_page=50&q=category%3A%E6%97%A5%E5%A0%B1+tag%3Agolang+tag%3Amcp&sort=updated"),
 			expectedHeaders: map[string]string{
 				"Authorization": "Bearer test-token",
 			},
@@ -62,8 +71,8 @@ func TestSearch_URLConstruction(t *testing.T) {
 					time.Date(2024, 12, 31, 0, 0, 0, 0, time.UTC),
 				),
 			},
-			expectedURL: "https://api.esa.io/v1/teams/test-team/posts?" +
-				"order=desc&page=1&per_page=20&q=created%3A%3E2024-01-01+created%3A%3C2024-12-31&sort=updated",
+			expectedURL: buildTestURL("test-team",
+				"order=desc&page=1&per_page=20&q=created%3A%3E2024-01-01+created%3A%3C2024-12-31&sort=updated"),
 			expectedHeaders: map[string]string{
 				"Authorization": "Bearer test-token",
 			},
@@ -73,8 +82,8 @@ func TestSearch_URLConstruction(t *testing.T) {
 			options: []SearchOption{
 				WithSort("created", "asc"),
 			},
-			expectedURL: "https://api.esa.io/v1/teams/test-team/posts?" +
-				"order=asc&page=1&per_page=20&sort=created",
+			expectedURL: buildTestURL("test-team",
+				"order=asc&page=1&per_page=20&sort=created"),
 			expectedHeaders: map[string]string{
 				"Authorization": "Bearer test-token",
 			},
