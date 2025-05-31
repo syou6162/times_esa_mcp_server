@@ -43,7 +43,7 @@ func TestQuickPostPromptHandler(t *testing.T) {
 					Name      string            `json:"name"`
 					Arguments map[string]string `json:"arguments,omitempty"`
 				}{
-					Name:      "quick-post",
+					Name:      PromptNameQuickPost,
 					Arguments: tt.arguments,
 				},
 			}
@@ -52,7 +52,7 @@ func TestQuickPostPromptHandler(t *testing.T) {
 
 			assert.NoError(t, err)
 			assert.NotNil(t, result)
-			assert.Equal(t, "times_esaへの素早い投稿用プロンプト", result.Description)
+			assert.Equal(t, PromptDescriptionQuickPost, result.Description)
 			assert.Len(t, result.Messages, 1)
 			assert.Equal(t, mcp.RoleUser, result.Messages[0].Role)
 

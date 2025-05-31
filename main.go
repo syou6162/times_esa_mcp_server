@@ -26,10 +26,10 @@ func main() {
 	s.AddTool(timesEsaTool, submitDailyReportLegacy)
 
 	// プロンプトテンプレートの定義と登録
-	quickPostPrompt := mcp.NewPrompt("quick-post",
-		mcp.WithPromptDescription("times_esaへの素早い投稿"),
+	quickPostPrompt := mcp.NewPrompt(PromptNameQuickPost,
+		mcp.WithPromptDescription(PromptDescriptionQuickPost),
 		mcp.WithArgument("text", 
-			mcp.ArgumentDescription("投稿するテキスト内容"),
+			mcp.ArgumentDescription(ArgumentDescriptionText),
 			mcp.RequiredArgument(),
 		),
 	)

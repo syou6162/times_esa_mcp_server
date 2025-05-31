@@ -29,7 +29,7 @@ func quickPostPromptHandler(ctx context.Context, request mcp.GetPromptRequest) (
 	}
 
 	return mcp.NewGetPromptResult(
-		"times_esaへの素早い投稿用プロンプト",
+		PromptDescriptionQuickPost,
 		messages,
 	), nil
 }
