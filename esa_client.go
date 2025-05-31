@@ -6,12 +6,37 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
+	"strings"
 	"time"
 )
 
+const (
+	// esaAPIBaseURL はesa.io APIのベースURL
+	esaAPIBaseURL = "https://api.esa.io/v1"
+	
+	// エンドポイントのパス定義
+	esaPostsEndpoint = "/teams/%s/posts"     // チームの投稿一覧
+	esaPostEndpoint  = "/teams/%s/posts/%d"  // 特定の投稿
+)
+
+// searchConfig は検索オプションを保持する構造体
+type searchConfig struct {
+	query         string
+	categoryQuery string // カテゴリー検索専用フィールド（排他的）
+	page          int
+	perPage       int
+	sort          string
+	order         string
+}
+
+// SearchOption は検索設定を変更する関数型
+type SearchOption func(*searchConfig)
+
 // EsaClientInterface はesa.ioとの通信を担当するインターフェース
 type EsaClientInterface interface {
+	Search(options ...SearchOption) (*EsaSearchResult, error)
 	SearchPostByCategory(category string) (*EsaPost, error)
 	CreatePost(text string) (*EsaPost, error)
 	UpdatePost(existingPost *EsaPost, text string) (*EsaPost, error)
@@ -66,11 +91,84 @@ func ConfigFromEnv() EsaConfig {
 
 // SearchPostByCategory はカテゴリから投稿を検索する
 func (c *EsaClient) SearchPostByCategory(category string) (*EsaPost, error) {
-	// 検索クエリの構築
-	url := fmt.Sprintf("https://api.esa.io/v1/teams/%s/posts?q=category:%s", c.config.TeamName, category)
+	// Searchメソッドを使用
+	result, err := c.Search(
+		WithCategory(category),
+		WithPagination(1, 1),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// 検索結果の処理
+	if result.TotalCount == 0 {
+		// 投稿が存在しない
+		return nil, nil
+	} else if result.TotalCount > 1 {
+		// 複数の投稿が存在する
+		return nil, errors.New("複数の日報が存在します")
+	}
+
+	// 最新の投稿を返す
+	return &result.Posts[0], nil
+}
+
+// Search は汎用的な検索を実行する
+func (c *EsaClient) Search(options ...SearchOption) (*EsaSearchResult, error) {
+	// デフォルト設定
+	config := &searchConfig{
+		page:    1,
+		perPage: 20, // APIのデフォルト値
+		sort:    "updated",
+		order:   "desc",
+	}
+
+	// オプションを適用
+	for _, opt := range options {
+		opt(config)
+	}
+
+	// URLの構築
+	apiURL := fmt.Sprintf("%s"+esaPostsEndpoint, esaAPIBaseURL, c.config.TeamName)
+	
+	// クエリパラメータの構築
+	params := make(map[string]string)
+	
+	// クエリ文字列の構築
+	queryParts := []string{}
+	if config.categoryQuery != "" {
+		queryParts = append(queryParts, config.categoryQuery)
+	}
+	if config.query != "" {
+		queryParts = append(queryParts, config.query)
+	}
+	if len(queryParts) > 0 {
+		params["q"] = strings.Join(queryParts, " ")
+	}
+	if config.page > 0 {
+		params["page"] = fmt.Sprintf("%d", config.page)
+	}
+	if config.perPage > 0 {
+		params["per_page"] = fmt.Sprintf("%d", config.perPage)
+	}
+	if config.sort != "" {
+		params["sort"] = config.sort
+	}
+	if config.order != "" {
+		params["order"] = config.order
+	}
+
+	// クエリパラメータをURLに追加
+	if len(params) > 0 {
+		values := url.Values{}
+		for key, value := range params {
+			values.Add(key, value)
+		}
+		apiURL += "?" + values.Encode()
+	}
 
 	// リクエストの作成
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest("GET", apiURL, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -97,17 +195,7 @@ func (c *EsaClient) SearchPostByCategory(category string) (*EsaPost, error) {
 		return nil, fmt.Errorf("検索結果の解析に失敗: %w", err)
 	}
 
-	// 検索結果の処理
-	if searchResult.TotalCount == 0 {
-		// 投稿が存在しない
-		return nil, nil
-	} else if searchResult.TotalCount > 1 {
-		// 複数の投稿が存在する
-		return nil, errors.New("複数の日報が存在します")
-	}
-
-	// 最新の投稿を返す
-	return &searchResult.Posts[0], nil
+	return &searchResult, nil
 }
 
 // CreatePost は新しい投稿を作成する
@@ -118,7 +206,7 @@ func (c *EsaClient) CreatePost(text string) (*EsaPost, error) {
 	title := "日報"
 	var tags []string
 
-	url := fmt.Sprintf("https://api.esa.io/v1/teams/%s/posts", c.config.TeamName)
+	url := fmt.Sprintf("%s"+esaPostsEndpoint, esaAPIBaseURL, c.config.TeamName)
 
 	// リクエストボディの作成
 	type postRequest struct {
@@ -182,7 +270,7 @@ func (c *EsaClient) CreatePost(text string) (*EsaPost, error) {
 
 // UpdatePost は既存の投稿を更新する
 func (c *EsaClient) UpdatePost(existingPost *EsaPost, text string) (*EsaPost, error) {
-	url := fmt.Sprintf("https://api.esa.io/v1/teams/%s/posts/%d", c.config.TeamName, existingPost.Number)
+	url := fmt.Sprintf("%s"+esaPostEndpoint, esaAPIBaseURL, c.config.TeamName, existingPost.Number)
 
 	// リクエストボディの作成
 	type patchRequest struct {
@@ -277,4 +365,113 @@ func updatePost(client *http.Client, config EsaConfig, existingPost *EsaPost, te
 	httpClient := &standardHTTPClient{client: client}
 	esaClient := NewEsaClient(httpClient, config)
 	return esaClient.UpdatePost(existingPost, text)
+}
+
+// WithCategory はカテゴリーの部分一致検索オプションを返す
+func WithCategory(category string) SearchOption {
+	return func(c *searchConfig) {
+		c.categoryQuery = fmt.Sprintf("category:%s", category)
+	}
+}
+
+// WithCategoryExact はカテゴリーの完全一致検索オプションを返す
+func WithCategoryExact(category string) SearchOption {
+	return func(c *searchConfig) {
+		c.categoryQuery = fmt.Sprintf("on:%s", category)
+	}
+}
+
+// WithCategoryPrefix はカテゴリーの前方一致検索オプションを返す
+func WithCategoryPrefix(category string) SearchOption {
+	return func(c *searchConfig) {
+		c.categoryQuery = fmt.Sprintf("in:%s", category)
+	}
+}
+
+// WithTags はタグ検索オプションを返す
+func WithTags(tags ...string) SearchOption {
+	return func(c *searchConfig) {
+		for _, tag := range tags {
+			if c.query != "" {
+				c.query += " "
+			}
+			c.query += fmt.Sprintf("tag:%s", tag)
+		}
+	}
+}
+
+// WithKeywords はキーワード検索オプションを返す
+func WithKeywords(keywords ...string) SearchOption {
+	return func(c *searchConfig) {
+		for _, keyword := range keywords {
+			if c.query != "" {
+				c.query += " "
+			}
+			c.query += keyword
+		}
+	}
+}
+
+// WithUser はユーザー検索オプションを返す
+func WithUser(screenName string) SearchOption {
+	return func(c *searchConfig) {
+		if c.query != "" {
+			c.query += " "
+		}
+		c.query += fmt.Sprintf("user:%s", screenName)
+	}
+}
+
+// WithDateRange は日付範囲検索オプションを返す
+func WithDateRange(field string, from, to time.Time) SearchOption {
+	return func(c *searchConfig) {
+		if !from.IsZero() {
+			if c.query != "" {
+				c.query += " "
+			}
+			c.query += fmt.Sprintf("%s:>%s", field, from.Format("2006-01-02"))
+		}
+		if !to.IsZero() {
+			if c.query != "" {
+				c.query += " "
+			}
+			c.query += fmt.Sprintf("%s:<%s", field, to.Format("2006-01-02"))
+		}
+	}
+}
+
+// WithWIP はWIP状態検索オプションを返す
+func WithWIP(wip bool) SearchOption {
+	return func(c *searchConfig) {
+		if c.query != "" {
+			c.query += " "
+		}
+		c.query += fmt.Sprintf("wip:%t", wip)
+	}
+}
+
+// WithStarred はスター状態検索オプションを返す
+func WithStarred(starred bool) SearchOption {
+	return func(c *searchConfig) {
+		if c.query != "" {
+			c.query += " "
+		}
+		c.query += fmt.Sprintf("starred:%t", starred)
+	}
+}
+
+// WithPagination はページネーションオプションを返す
+func WithPagination(page, perPage int) SearchOption {
+	return func(c *searchConfig) {
+		c.page = page
+		c.perPage = perPage
+	}
+}
+
+// WithSort はソートオプションを返す
+func WithSort(sort, order string) SearchOption {
+	return func(c *searchConfig) {
+		c.sort = sort
+		c.order = order
+	}
 }
