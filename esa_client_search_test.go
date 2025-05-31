@@ -24,6 +24,11 @@ func buildTestURL(teamName string, queryParams string) string {
 
 // TestSearch_URLConstruction はSearchメソッドが正しいURLを構築することを検証する
 func TestSearch_URLConstruction(t *testing.T) {
+	// 共通のヘッダー
+	commonHeaders := map[string]string{
+		"Authorization": "Bearer test-token",
+	}
+	
 	tests := []struct {
 		name            string
 		options         []SearchOption
@@ -35,9 +40,7 @@ func TestSearch_URLConstruction(t *testing.T) {
 			options: []SearchOption{},
 			expectedURL: buildTestURL("test-team",
 				"order=desc&page=1&per_page=20&sort=updated"),
-			expectedHeaders: map[string]string{
-				"Authorization": "Bearer test-token",
-			},
+			expectedHeaders: commonHeaders,
 		},
 		{
 			name: "カテゴリー検索",
@@ -46,9 +49,7 @@ func TestSearch_URLConstruction(t *testing.T) {
 			},
 			expectedURL: buildTestURL("test-team",
 				"order=desc&page=1&per_page=20&q=category%3A%E6%97%A5%E5%A0%B1%2F2024%2F12&sort=updated"),
-			expectedHeaders: map[string]string{
-				"Authorization": "Bearer test-token",
-			},
+			expectedHeaders: commonHeaders,
 		},
 		{
 			name: "複数のオプション",
@@ -59,9 +60,7 @@ func TestSearch_URLConstruction(t *testing.T) {
 			},
 			expectedURL: buildTestURL("test-team",
 				"order=desc&page=2&per_page=50&q=category%3A%E6%97%A5%E5%A0%B1+tag%3Agolang+tag%3Amcp&sort=updated"),
-			expectedHeaders: map[string]string{
-				"Authorization": "Bearer test-token",
-			},
+			expectedHeaders: commonHeaders,
 		},
 		{
 			name: "日付範囲検索",
@@ -73,9 +72,7 @@ func TestSearch_URLConstruction(t *testing.T) {
 			},
 			expectedURL: buildTestURL("test-team",
 				"order=desc&page=1&per_page=20&q=created%3A%3E2024-01-01+created%3A%3C2024-12-31&sort=updated"),
-			expectedHeaders: map[string]string{
-				"Authorization": "Bearer test-token",
-			},
+			expectedHeaders: commonHeaders,
 		},
 		{
 			name: "ソート指定",
@@ -84,9 +81,7 @@ func TestSearch_URLConstruction(t *testing.T) {
 			},
 			expectedURL: buildTestURL("test-team",
 				"order=asc&page=1&per_page=20&sort=created"),
-			expectedHeaders: map[string]string{
-				"Authorization": "Bearer test-token",
-			},
+			expectedHeaders: commonHeaders,
 		},
 	}
 
