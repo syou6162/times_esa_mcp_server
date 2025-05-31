@@ -219,7 +219,73 @@ func TestSearch_QueryConstruction(t *testing.T) {
 				opt(config)
 			}
 			
-			assert.Equal(t, tt.expectedQuery, config.query)
+			// カテゴリークエリと通常クエリを結合してチェック
+			var actualQuery string
+			if config.categoryQuery != "" && config.query != "" {
+				actualQuery = config.categoryQuery + " " + config.query
+			} else if config.categoryQuery != "" {
+				actualQuery = config.categoryQuery
+			} else {
+				actualQuery = config.query
+			}
+			
+			assert.Equal(t, tt.expectedQuery, actualQuery)
+		})
+	}
+}
+
+// TestSearch_CategoryOverwrite はカテゴリーオプションの上書き動作を検証する
+func TestSearch_CategoryOverwrite(t *testing.T) {
+	tests := []struct {
+		name                 string
+		options              []SearchOption
+		expectedCategoryQuery string
+	}{
+		{
+			name: "カテゴリーオプションの上書き（部分一致→完全一致）",
+			options: []SearchOption{
+				WithCategory("日報"),
+				WithCategoryExact("日報/2024/12/20"),
+			},
+			expectedCategoryQuery: "on:日報/2024/12/20",
+		},
+		{
+			name: "カテゴリーオプションの上書き（完全一致→前方一致）",
+			options: []SearchOption{
+				WithCategoryExact("日報/2024/12/20"),
+				WithCategoryPrefix("日報/2024"),
+			},
+			expectedCategoryQuery: "in:日報/2024",
+		},
+		{
+			name: "カテゴリーオプションの上書き（前方一致→部分一致）",
+			options: []SearchOption{
+				WithCategoryPrefix("日報/2024"),
+				WithCategory("日報"),
+			},
+			expectedCategoryQuery: "category:日報",
+		},
+		{
+			name: "複数の上書き",
+			options: []SearchOption{
+				WithCategory("日報"),
+				WithCategoryExact("日報/2024/12/20"),
+				WithCategoryPrefix("日報/2024"),
+				WithCategory("日報/2024/12"),
+			},
+			expectedCategoryQuery: "category:日報/2024/12",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			config := &searchConfig{}
+			
+			for _, opt := range tt.options {
+				opt(config)
+			}
+			
+			assert.Equal(t, tt.expectedCategoryQuery, config.categoryQuery)
 		})
 	}
 }

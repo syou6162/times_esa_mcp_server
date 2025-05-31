@@ -82,11 +82,12 @@ func SearchWithQuery(query string, page, perPage int) (*EsaSearchResult, error)
 ### 1. 基本構造の定義
 ```go
 type searchConfig struct {
-    query      string
-    page       int
-    perPage    int
-    sort       string
-    order      string
+    query         string
+    categoryQuery string // カテゴリー検索専用フィールド（排他的）
+    page          int
+    perPage       int
+    sort          string
+    order         string
 }
 
 type SearchOption func(*searchConfig)
@@ -179,6 +180,26 @@ results, err := client.Search(
 // 完全一致でのカテゴリー検索
 results, err := client.Search(
     WithCategoryExact("日報/2024/12/20"),
+)
+```
+
+### カテゴリーオプションの排他的動作
+
+カテゴリー検索オプション（`WithCategory`、`WithCategoryExact`、`WithCategoryPrefix`）は排他的に動作します。複数指定した場合、最後に指定されたオプションが有効となります。
+
+```go
+// 最後のWithCategoryが有効になる
+results, err := client.Search(
+    WithCategoryExact("日報/2024/12/20"),  // この指定は無効
+    WithCategoryPrefix("日報/2024"),       // この指定は無効
+    WithCategory("日報"),                  // これが有効（category:日報）
+)
+
+// 他の検索オプションと組み合わせ可能
+results, err := client.Search(
+    WithCategory("日報"),       // カテゴリー検索
+    WithTags("golang", "mcp"),  // タグ検索（両方適用される）
+    WithUser("test_user"),      // ユーザー検索（適用される）
 )
 ```
 

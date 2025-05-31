@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -22,11 +23,12 @@ const (
 
 // searchConfig は検索オプションを保持する構造体
 type searchConfig struct {
-	query   string
-	page    int
-	perPage int
-	sort    string
-	order   string
+	query         string
+	categoryQuery string // カテゴリー検索専用フィールド（排他的）
+	page          int
+	perPage       int
+	sort          string
+	order         string
 }
 
 // SearchOption は検索設定を変更する関数型
@@ -131,8 +133,17 @@ func (c *EsaClient) Search(options ...SearchOption) (*EsaSearchResult, error) {
 	
 	// クエリパラメータの構築
 	params := make(map[string]string)
+	
+	// クエリ文字列の構築
+	queryParts := []string{}
+	if config.categoryQuery != "" {
+		queryParts = append(queryParts, config.categoryQuery)
+	}
 	if config.query != "" {
-		params["q"] = config.query
+		queryParts = append(queryParts, config.query)
+	}
+	if len(queryParts) > 0 {
+		params["q"] = strings.Join(queryParts, " ")
 	}
 	if config.page > 0 {
 		params["page"] = fmt.Sprintf("%d", config.page)
@@ -359,30 +370,21 @@ func updatePost(client *http.Client, config EsaConfig, existingPost *EsaPost, te
 // WithCategory はカテゴリーの部分一致検索オプションを返す
 func WithCategory(category string) SearchOption {
 	return func(c *searchConfig) {
-		if c.query != "" {
-			c.query += " "
-		}
-		c.query += fmt.Sprintf("category:%s", category)
+		c.categoryQuery = fmt.Sprintf("category:%s", category)
 	}
 }
 
 // WithCategoryExact はカテゴリーの完全一致検索オプションを返す
 func WithCategoryExact(category string) SearchOption {
 	return func(c *searchConfig) {
-		if c.query != "" {
-			c.query += " "
-		}
-		c.query += fmt.Sprintf("on:%s", category)
+		c.categoryQuery = fmt.Sprintf("on:%s", category)
 	}
 }
 
 // WithCategoryPrefix はカテゴリーの前方一致検索オプションを返す
 func WithCategoryPrefix(category string) SearchOption {
 	return func(c *searchConfig) {
-		if c.query != "" {
-			c.query += " "
-		}
-		c.query += fmt.Sprintf("in:%s", category)
+		c.categoryQuery = fmt.Sprintf("in:%s", category)
 	}
 }
 
