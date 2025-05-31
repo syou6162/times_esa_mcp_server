@@ -129,7 +129,7 @@ func (c *EsaClient) Search(options ...SearchOption) (*EsaSearchResult, error) {
 	}
 
 	// URLの構築
-	apiURL := fmt.Sprintf("%s%s", esaAPIBaseURL, fmt.Sprintf(esaPostsEndpoint, c.config.TeamName))
+	apiURL := fmt.Sprintf("%s"+esaPostsEndpoint, esaAPIBaseURL, c.config.TeamName)
 	
 	// クエリパラメータの構築
 	params := make(map[string]string)
@@ -206,7 +206,7 @@ func (c *EsaClient) CreatePost(text string) (*EsaPost, error) {
 	title := "日報"
 	var tags []string
 
-	url := fmt.Sprintf("%s%s", esaAPIBaseURL, fmt.Sprintf(esaPostsEndpoint, c.config.TeamName))
+	url := fmt.Sprintf("%s"+esaPostsEndpoint, esaAPIBaseURL, c.config.TeamName)
 
 	// リクエストボディの作成
 	type postRequest struct {
@@ -270,7 +270,7 @@ func (c *EsaClient) CreatePost(text string) (*EsaPost, error) {
 
 // UpdatePost は既存の投稿を更新する
 func (c *EsaClient) UpdatePost(existingPost *EsaPost, text string) (*EsaPost, error) {
-	url := fmt.Sprintf("%s%s", esaAPIBaseURL, fmt.Sprintf(esaPostEndpoint, c.config.TeamName, existingPost.Number))
+	url := fmt.Sprintf("%s"+esaPostEndpoint, esaAPIBaseURL, c.config.TeamName, existingPost.Number)
 
 	// リクエストボディの作成
 	type patchRequest struct {
