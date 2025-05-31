@@ -25,6 +25,16 @@ func main() {
 	// ツールの登録（後方互換性のあるラッパー関数を使用）
 	s.AddTool(timesEsaTool, submitDailyReportLegacy)
 
+	// プロンプトテンプレートの定義と登録
+	quickPostPrompt := mcp.NewPrompt("quick-post",
+		mcp.WithPromptDescription("times_esaへの素早い投稿"),
+		mcp.WithArgument("text", 
+			mcp.ArgumentDescription("投稿するテキスト内容"),
+			mcp.RequiredArgument(),
+		),
+	)
+	s.AddPrompt(quickPostPrompt, quickPostPromptHandler)
+
 	if err := server.ServeStdio(s); err != nil {
 		fmt.Printf("Server error: %v\n", err)
 	}
