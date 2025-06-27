@@ -3,39 +3,30 @@ package main
 import (
 	"fmt"
 
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 func main() {
-	s := server.NewMCPServer(
-		"times-esa-mcp-server",
-		"1.0.0",
+	s := mcp.NewServer("times-esa-mcp-server", "1.0.0", nil)
+
+	// times-esaツールの定義（日報投稿用）
+	timesEsaTool := mcp.NewServerTool[PostDailyReportArgs, PostDailyReportResult](
+		"times-esa",
+		"times-esaに日報を投稿します",
+		submitDailyReportHandler,
 	)
 
-	// times-esaツールの定義（日報投稿用 - textパラメータのみに簡略化）
-	timesEsaTool := mcp.NewTool("times-esa",
-		mcp.WithDescription("times-esaに日報を投稿します"),
-		mcp.WithString("text",
-			mcp.Required(),
-			mcp.Description("投稿するテキスト内容"),
-		),
-	)
-
-	// ツールの登録（後方互換性のあるラッパー関数を使用）
-	s.AddTool(timesEsaTool, submitDailyReportLegacy)
+	s.AddTools(timesEsaTool)
 
 	// プロンプトテンプレートの定義と登録
-	quickPostPrompt := mcp.NewPrompt(PromptNameQuickPost,
-		mcp.WithPromptDescription(PromptDescriptionQuickPost),
-		mcp.WithArgument("text", 
-			mcp.ArgumentDescription(ArgumentDescriptionText),
-			mcp.RequiredArgument(),
-		),
+	quickPostPrompt := mcp.NewServerPrompt[QuickPostArgs](
+		PromptNameQuickPost,
+		PromptDescriptionQuickPost,
+		quickPostPromptHandler,
 	)
-	s.AddPrompt(quickPostPrompt, quickPostPromptHandler)
+	s.AddPrompts(quickPostPrompt)
 
-	if err := server.ServeStdio(s); err != nil {
+	if err := s.Serve(); err != nil {
 		fmt.Printf("Server error: %v\n", err)
 	}
 }

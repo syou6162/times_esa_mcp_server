@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/mark3labs/mcp-go/mcp"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 // DefaultHandlerFactory は標準的なハンドラーを生成します
@@ -24,11 +24,11 @@ func (f *DefaultHandlerFactory) CreateEsaClient() (EsaClientInterface, error) {
 }
 
 // submitDailyReportWithTime は日報を投稿するハンドラーの内部実装（時間指定可能）
-func submitDailyReportWithTime(_ context.Context, request mcp.CallToolRequest, esaClient EsaClientInterface, now time.Time) (*mcp.CallToolResult, error) {
+func submitDailyReportWithTime(_ context.Context, args PostDailyReportArgs, esaClient EsaClientInterface, now time.Time) (*PostDailyReportResult, error) {
 	// パラメーターの取得
-	text, err := request.RequireString("text")
-	if err != nil {
-		return nil, fmt.Errorf("text parameter is required: %w", err)
+	text := args.Text
+	if text == "" {
+		return nil, fmt.Errorf("text parameter is required")
 	}
 
 	// #times-esa除去（prefix自体と直後の空白のみ除去、他は一切変更しない）
@@ -66,33 +66,40 @@ func submitDailyReportWithTime(_ context.Context, request mcp.CallToolRequest, e
 	}
 
 	// レスポンスの作成
-	response := DailyReportResponse{
+	response := &PostDailyReportResult{
 		Success: true,
 		Message: "日報を投稿しました",
 		Post:    *post,
 	}
 
-	// JSONに変換してレスポンスを返す
-	jsonBytes, err := json.Marshal(response)
-	if err != nil {
-		return nil, fmt.Errorf("レスポンスのJSON変換に失敗: %w", err)
-	}
-
-	return mcp.NewToolResultText(string(jsonBytes)), nil
+	return response, nil
 }
 
 // submitDailyReport は日報を投稿するハンドラー（テスト可能な依存性注入バージョン）
-func submitDailyReport(ctx context.Context, request mcp.CallToolRequest, esaClient EsaClientInterface) (*mcp.CallToolResult, error) {
-	return submitDailyReportWithTime(ctx, request, esaClient, time.Now())
+func submitDailyReport(ctx context.Context, args PostDailyReportArgs, esaClient EsaClientInterface) (*PostDailyReportResult, error) {
+	return submitDailyReportWithTime(ctx, args, esaClient, time.Now())
 }
 
-// 後方互換性のためのラッパー
-func submitDailyReportLegacy(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// submitDailyReportHandler は公式SDK用のハンドラー
+func submitDailyReportHandler(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[PostDailyReportArgs]) (*mcp.CallToolResultFor[PostDailyReportResult], error) {
 	factory := &DefaultHandlerFactory{}
 	esaClient, err := factory.CreateEsaClient()
 	if err != nil {
 		return nil, err
 	}
 
-	return submitDailyReport(ctx, request, esaClient)
+	result, err := submitDailyReport(ctx, params.Arguments, esaClient)
+	if err != nil {
+		return nil, err
+	}
+
+	return &mcp.CallToolResultFor[PostDailyReportResult]{
+		Content: []mcp.Content{
+			{
+				Type: "text",
+				Text: fmt.Sprintf("Success: %t, Message: %s", result.Success, result.Message),
+			},
+		},
+		IsError: false,
+	}, nil
 }

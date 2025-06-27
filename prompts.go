@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/mark3labs/mcp-go/mcp"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 // プロンプトテンプレート関連の定数
@@ -20,28 +20,47 @@ const (
 )
 
 // quickPostPromptHandler はquick-postプロンプトを処理します
-func quickPostPromptHandler(ctx context.Context, request mcp.GetPromptRequest) (*mcp.GetPromptResult, error) {
+func quickPostPromptHandler(ctx context.Context, ss *mcp.ServerSession, params *mcp.GetPromptParamsFor[QuickPostArgs]) (*mcp.GetPromptResultFor[QuickPostResult], error) {
 	// 引数からテキストを取得
-	text, exists := request.Params.Arguments["text"]
-	if !exists || text == "" {
+	text := params.Arguments.Text
+	if text == "" {
 		text = "内容を入力してください"
 	}
 
 	// プロンプトメッセージを作成
 	promptText := fmt.Sprintf("以下の内容をtimes_esaに投稿してください：\n\n%s", text)
 	
-	messages := []mcp.PromptMessage{
+	messages := []PromptMessage{
 		{
-			Role: mcp.RoleUser,
-			Content: mcp.TextContent{
+			Role: "user",
+			Content: TextContent{
 				Type: "text",
 				Text: promptText,
 			},
 		},
 	}
 
-	return mcp.NewGetPromptResult(
-		PromptDescriptionQuickPost,
-		messages,
-	), nil
+	result := &QuickPostResult{
+		Description: PromptDescriptionQuickPost,
+		Messages:    messages,
+	}
+
+	return &mcp.GetPromptResultFor[QuickPostResult]{
+		Description: result.Description,
+		Messages:    convertToMCPMessages(result.Messages),
+	}, nil
+}
+
+func convertToMCPMessages(messages []PromptMessage) []mcp.PromptMessage {
+	mcpMessages := make([]mcp.PromptMessage, len(messages))
+	for i, msg := range messages {
+		mcpMessages[i] = mcp.PromptMessage{
+			Role: mcp.Role(msg.Role),
+			Content: mcp.TextContent{
+				Type: msg.Content.Type,
+				Text: msg.Content.Text,
+			},
+		}
+	}
+	return mcpMessages
 }
