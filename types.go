@@ -9,8 +9,3 @@ type PostDailyReportResult struct {
 	Message string  `json:"message"`
 	Post    EsaPost `json:"post"`
 }
-
-type QuickPostArgs struct {
-	Text string `json:"text"`
-}
-

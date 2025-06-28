@@ -22,8 +22,6 @@ func (f *DefaultHandlerFactory) CreateEsaClient() (EsaClientInterface, error) {
 	return NewEsaClient(httpClient, config), nil
 }
 
-
-
 // submitDailyReportHandlerWithTime は日報を投稿するハンドラー（時間指定可能、テスト用）
 func submitDailyReportHandlerWithTime(ctx context.Context, _ *mcp.ServerSession, params *mcp.CallToolParamsFor[PostDailyReportArgs], esaClient EsaClientInterface, now time.Time) (*mcp.CallToolResultFor[PostDailyReportResult], error) {
 
