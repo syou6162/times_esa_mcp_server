@@ -15,10 +15,10 @@ import (
 const (
 	// esaAPIBaseURL はesa.io APIのベースURL
 	esaAPIBaseURL = "https://api.esa.io/v1"
-	
+
 	// エンドポイントのパス定義
-	esaPostsEndpoint = "/teams/%s/posts"     // チームの投稿一覧
-	esaPostEndpoint  = "/teams/%s/posts/%d"  // 特定の投稿
+	esaPostsEndpoint = "/teams/%s/posts"    // チームの投稿一覧
+	esaPostEndpoint  = "/teams/%s/posts/%d" // 特定の投稿
 )
 
 // searchConfig は検索オプションを保持する構造体
@@ -130,10 +130,10 @@ func (c *EsaClient) Search(options ...SearchOption) (*EsaSearchResult, error) {
 
 	// URLの構築
 	apiURL := fmt.Sprintf("%s"+esaPostsEndpoint, esaAPIBaseURL, c.config.TeamName)
-	
+
 	// クエリパラメータの構築
 	params := make(map[string]string)
-	
+
 	// クエリ文字列の構築
 	queryParts := []string{}
 	if config.categoryQuery != "" {

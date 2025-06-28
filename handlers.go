@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/mark3labs/mcp-go/mcp"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 // DefaultHandlerFactory は標準的なハンドラーを生成します

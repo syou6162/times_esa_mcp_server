@@ -1,10 +1,10 @@
 package main
 
 import (
+	"context"
 	"fmt"
 
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 func main() {
@@ -28,7 +28,7 @@ func main() {
 	// プロンプトテンプレートの定義と登録
 	quickPostPrompt := mcp.NewPrompt(PromptNameQuickPost,
 		mcp.WithPromptDescription(PromptDescriptionQuickPost),
-		mcp.WithArgument("text", 
+		mcp.WithArgument("text",
 			mcp.ArgumentDescription(ArgumentDescriptionText),
 			mcp.RequiredArgument(),
 		),
