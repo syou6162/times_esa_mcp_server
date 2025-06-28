@@ -36,7 +36,7 @@ func main() {
 	)
 	s.AddPrompt(quickPostPrompt, quickPostPromptHandler)
 
-	if err := server.ServeStdio(s); err != nil {
+	if err := s.Run(context.Background(), mcp.NewStdioTransport()); err != nil {
 		fmt.Printf("Server error: %v\n", err)
 	}
 }
