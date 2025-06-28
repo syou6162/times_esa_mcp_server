@@ -20,7 +20,7 @@ const (
 )
 
 // quickPostPromptHandler はquick-postプロンプトを処理します
-// TODO: 新しいAPIに移行
+// TODO: プロンプトAPIに移行
 /*
 func quickPostPromptHandler(ctx context.Context, request mcp.GetPromptRequest) (*mcp.GetPromptResult, error) {
 	// 引数からテキストを取得

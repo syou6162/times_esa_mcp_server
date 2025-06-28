@@ -1,6 +1,6 @@
 package main
 
-// TODO: プロンプト関連のテストを新しいAPIに移行
+// TODO: プロンプト関連のテストを実装
 /*
 import (
 	"context"

@@ -64,7 +64,7 @@ func submitDailyReportHandlerWithTime(ctx context.Context, _ *mcp.ServerSession,
 		}
 	}
 
-	// 新しいレスポンス形式で返す
+	// レスポンスを返す
 	return &mcp.CallToolResultFor[PostDailyReportResult]{
 		StructuredContent: PostDailyReportResult{
 			Success: true,
@@ -74,7 +74,7 @@ func submitDailyReportHandlerWithTime(ctx context.Context, _ *mcp.ServerSession,
 	}, nil
 }
 
-// submitDailyReportHandler は新しいSDK用のハンドラー
+// submitDailyReportHandler は日報を投稿するハンドラー
 func submitDailyReportHandler(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[PostDailyReportArgs]) (*mcp.CallToolResultFor[PostDailyReportResult], error) {
 	factory := &DefaultHandlerFactory{}
 	esaClient, err := factory.CreateEsaClient()

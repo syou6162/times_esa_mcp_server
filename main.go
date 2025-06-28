@@ -31,7 +31,7 @@ func main() {
 	s.AddTools(timesEsaTool)
 
 	// プロンプトテンプレートの定義と登録
-	// TODO: プロンプト関連を新しいAPIに移行
+	// TODO: プロンプト機能を実装
 	// quickPostPrompt := mcp.NewPrompt(PromptNameQuickPost,
 	// 	mcp.WithPromptDescription(PromptDescriptionQuickPost),
 	// 	mcp.WithArgument("text",
