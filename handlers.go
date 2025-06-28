@@ -22,11 +22,16 @@ func (f *DefaultHandlerFactory) CreateEsaClient() (EsaClientInterface, error) {
 	return NewEsaClient(httpClient, config), nil
 }
 
-// submitDailyReportHandlerWithTime は日報を投稿するハンドラー（時間指定可能、テスト用）
-func submitDailyReportHandlerWithTime(ctx context.Context, _ *mcp.ServerSession, params *mcp.CallToolParamsFor[PostDailyReportArgs], esaClient EsaClientInterface, now time.Time) (*mcp.CallToolResultFor[PostDailyReportResult], error) {
+// submitDailyReportWithClock は日報を投稿するハンドラー（時間指定可能、テスト用）
+func submitDailyReportWithClock(ctx context.Context, _ *mcp.ServerSession, params *mcp.CallToolParamsFor[TimesEsaPostRequest], esaClient EsaClientInterface, now time.Time) (*mcp.CallToolResultFor[TimesEsaPostResponse], error) {
 
 	// パラメーターの取得
 	text := params.Arguments.Text
+
+	// 空文字チェック
+	if text == "" {
+		return nil, fmt.Errorf("text parameter cannot be empty")
+	}
 
 	// #times-esa除去（prefix自体と直後の空白のみ除去、他は一切変更しない）
 	text = stripPrefix(text, "#times-esa")
@@ -63,8 +68,8 @@ func submitDailyReportHandlerWithTime(ctx context.Context, _ *mcp.ServerSession,
 	}
 
 	// レスポンスを返す
-	return &mcp.CallToolResultFor[PostDailyReportResult]{
-		StructuredContent: PostDailyReportResult{
+	return &mcp.CallToolResultFor[TimesEsaPostResponse]{
+		StructuredContent: TimesEsaPostResponse{
 			Success: true,
 			Message: "日報を投稿しました",
 			Post:    *post,
@@ -73,11 +78,11 @@ func submitDailyReportHandlerWithTime(ctx context.Context, _ *mcp.ServerSession,
 }
 
 // submitDailyReportHandler は日報を投稿するハンドラー
-func submitDailyReportHandler(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[PostDailyReportArgs]) (*mcp.CallToolResultFor[PostDailyReportResult], error) {
+func submitDailyReportHandler(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[TimesEsaPostRequest]) (*mcp.CallToolResultFor[TimesEsaPostResponse], error) {
 	factory := &DefaultHandlerFactory{}
 	esaClient, err := factory.CreateEsaClient()
 	if err != nil {
 		return nil, err
 	}
-	return submitDailyReportHandlerWithTime(ctx, ss, params, esaClient, time.Now())
+	return submitDailyReportWithClock(ctx, ss, params, esaClient, time.Now())
 }

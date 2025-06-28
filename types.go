@@ -1,10 +1,10 @@
 package main
 
-type PostDailyReportArgs struct {
+type TimesEsaPostRequest struct {
 	Text string `json:"text"`
 }
 
-type PostDailyReportResult struct {
+type TimesEsaPostResponse struct {
 	Success bool    `json:"success"`
 	Message string  `json:"message"`
 	Post    EsaPost `json:"post"`

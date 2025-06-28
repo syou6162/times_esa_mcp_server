@@ -15,7 +15,7 @@ func main() {
 	)
 
 	// times-esaツールの定義（日報投稿用 - textパラメータのみに簡略化）
-	timesEsaTool := mcp.NewServerTool[PostDailyReportArgs, PostDailyReportResult](
+	timesEsaTool := mcp.NewServerTool[TimesEsaPostRequest, TimesEsaPostResponse](
 		"times-esa",
 		"times-esaに日報を投稿します",
 		submitDailyReportHandler,
