@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -36,8 +35,7 @@ func TestSubmitDailyReport(t *testing.T) {
 		mockEsaClient.EXPECT().CreatePost(testText).Return(mockPost, nil)
 
 		// リクエスト作成
-		req := mcp.CallToolRequest{}
-		req.Params.Arguments = map[string]any{
+		req := CallToolRequest{
 			"text": testText,
 		}
 		// テスト対象の関数を実行
@@ -47,10 +45,10 @@ func TestSubmitDailyReport(t *testing.T) {
 		require.NoError(t, err, "submitDailyReport should not return an error")
 		require.NotNil(t, result, "submitDailyReport should return a result")
 		require.Len(t, result.Content, 1, "Result should contain one content item")
-		require.IsType(t, mcp.TextContent{}, result.Content[0], "Content item should be TextContent")
+		require.IsType(t, &TextContent{}, result.Content[0], "Content item should be TextContent")
 
 		// レスポンスのJSONをパースして内容を検証
-		textContent := result.Content[0].(mcp.TextContent).Text
+		textContent := result.Content[0].(*TextContent).Text
 		var response DailyReportResponse
 		err = json.Unmarshal([]byte(textContent), &response)
 		assert.NoError(t, err)
@@ -83,8 +81,7 @@ func TestSubmitDailyReport(t *testing.T) {
 		mockEsaClient.EXPECT().UpdatePost(existingPost, testText).Return(updatedPost, nil)
 
 		// リクエスト作成
-		req := mcp.CallToolRequest{}
-		req.Params.Arguments = map[string]any{
+		req := CallToolRequest{
 			"text": testText,
 		}
 
@@ -95,9 +92,9 @@ func TestSubmitDailyReport(t *testing.T) {
 		require.NoError(t, err, "submitDailyReport should not return an error")
 		require.NotNil(t, result, "submitDailyReport should return a result")
 		require.Len(t, result.Content, 1, "Result should contain one content item")
-		require.IsType(t, mcp.TextContent{}, result.Content[0], "Content item should be TextContent")
+		require.IsType(t, &TextContent{}, result.Content[0], "Content item should be TextContent")
 
-		textContent := result.Content[0].(mcp.TextContent).Text
+		textContent := result.Content[0].(*TextContent).Text
 		var response DailyReportResponse
 		err = json.Unmarshal([]byte(textContent), &response)
 		assert.NoError(t, err)
@@ -116,8 +113,7 @@ func TestSubmitDailyReport(t *testing.T) {
 		mockEsaClient.EXPECT().SearchPostByCategory("日報/2025/05/03").Return(nil, errors.New("API接続エラー"))
 
 		// リクエスト作成
-		req := mcp.CallToolRequest{}
-		req.Params.Arguments = map[string]any{
+		req := CallToolRequest{
 			"text": "テスト内容",
 		}
 		// テスト対象の関数を実行
@@ -149,8 +145,7 @@ func TestSubmitDailyReport(t *testing.T) {
 		mockEsaClient.EXPECT().CreatePost(expectedText).Return(mockPost, nil)
 
 		// リクエスト作成
-		req := mcp.CallToolRequest{}
-		req.Params.Arguments = map[string]any{
+		req := CallToolRequest{
 			"text": inputText,
 		}
 
@@ -171,8 +166,7 @@ func TestSubmitDailyReport(t *testing.T) {
 		mockEsaClient := NewMockEsaClientInterface(t)
 
 		// text引数が文字列でない場合
-		req := mcp.CallToolRequest{}
-		req.Params.Arguments = map[string]any{
+		req := CallToolRequest{
 			"text": 123, // 文字列ではなく数値
 		}
 
