@@ -1,11 +1,11 @@
 package main
 
-import (
-	"context"
-	"fmt"
-
-	"github.com/modelcontextprotocol/go-sdk/mcp"
-)
+// import (
+// 	"context"
+// 	"fmt"
+//
+// 	"github.com/modelcontextprotocol/go-sdk/mcp"
+// )
 
 // プロンプトテンプレート関連の定数
 const (
@@ -20,6 +20,8 @@ const (
 )
 
 // quickPostPromptHandler はquick-postプロンプトを処理します
+// TODO: 新しいAPIに移行
+/*
 func quickPostPromptHandler(ctx context.Context, request mcp.GetPromptRequest) (*mcp.GetPromptResult, error) {
 	// 引数からテキストを取得
 	text, exists := request.Params.Arguments["text"]
@@ -45,3 +47,4 @@ func quickPostPromptHandler(ctx context.Context, request mcp.GetPromptRequest) (
 		messages,
 	), nil
 }
+*/

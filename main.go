@@ -15,26 +15,31 @@ func main() {
 	)
 
 	// times-esaツールの定義（日報投稿用 - textパラメータのみに簡略化）
-	timesEsaTool := mcp.NewTool("times-esa",
-		mcp.WithDescription("times-esaに日報を投稿します"),
-		mcp.WithString("text",
-			mcp.Required(),
-			mcp.Description("投稿するテキスト内容"),
+	timesEsaTool := mcp.NewServerTool[PostDailyReportArgs, PostDailyReportResult](
+		"times-esa",
+		"times-esaに日報を投稿します",
+		submitDailyReportHandler,
+		mcp.Input(
+			mcp.Property("text",
+				mcp.Description("投稿するテキスト内容"),
+				mcp.Required(true),
+			),
 		),
 	)
 
-	// ツールの登録（後方互換性のあるラッパー関数を使用）
-	s.AddTool(timesEsaTool, submitDailyReportLegacy)
+	// ツールの登録
+	s.AddTools(timesEsaTool)
 
 	// プロンプトテンプレートの定義と登録
-	quickPostPrompt := mcp.NewPrompt(PromptNameQuickPost,
-		mcp.WithPromptDescription(PromptDescriptionQuickPost),
-		mcp.WithArgument("text",
-			mcp.ArgumentDescription(ArgumentDescriptionText),
-			mcp.RequiredArgument(),
-		),
-	)
-	s.AddPrompt(quickPostPrompt, quickPostPromptHandler)
+	// TODO: プロンプト関連を新しいAPIに移行
+	// quickPostPrompt := mcp.NewPrompt(PromptNameQuickPost,
+	// 	mcp.WithPromptDescription(PromptDescriptionQuickPost),
+	// 	mcp.WithArgument("text",
+	// 		mcp.ArgumentDescription(ArgumentDescriptionText),
+	// 		mcp.RequiredArgument(),
+	// 	),
+	// )
+	// s.AddPrompt(quickPostPrompt, quickPostPromptHandler)
 
 	if err := s.Run(context.Background(), mcp.NewStdioTransport()); err != nil {
 		fmt.Printf("Server error: %v\n", err)
