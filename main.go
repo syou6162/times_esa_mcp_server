@@ -8,9 +8,10 @@ import (
 )
 
 func main() {
-	s := server.NewMCPServer(
+	s := mcp.NewServer(
 		"times-esa-mcp-server",
 		"1.0.0",
+		nil,
 	)
 
 	// times-esaツールの定義（日報投稿用 - textパラメータのみに簡略化）
