@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -23,13 +22,13 @@ func (f *DefaultHandlerFactory) CreateEsaClient() (EsaClientInterface, error) {
 	return NewEsaClient(httpClient, config), nil
 }
 
-// submitDailyReportWithTime は日報を投稿するハンドラーの内部実装（時間指定可能）
-func submitDailyReportWithTime(_ context.Context, request CallToolRequest, esaClient EsaClientInterface, now time.Time) (*CallToolResult, error) {
+
+
+// submitDailyReportHandlerWithTime は日報を投稿するハンドラー（時間指定可能、テスト用）
+func submitDailyReportHandlerWithTime(ctx context.Context, _ *mcp.ServerSession, params *mcp.CallToolParamsFor[PostDailyReportArgs], esaClient EsaClientInterface, now time.Time) (*mcp.CallToolResultFor[PostDailyReportResult], error) {
+
 	// パラメーターの取得
-	text, err := request.RequireString("text")
-	if err != nil {
-		return nil, fmt.Errorf("text parameter is required: %w", err)
-	}
+	text := params.Arguments.Text
 
 	// #times-esa除去（prefix自体と直後の空白のみ除去、他は一切変更しない）
 	text = stripPrefix(text, "#times-esa")
@@ -65,68 +64,22 @@ func submitDailyReportWithTime(_ context.Context, request CallToolRequest, esaCl
 		}
 	}
 
-	// レスポンスの作成
-	response := DailyReportResponse{
-		Success: true,
-		Message: "日報を投稿しました",
-		Post:    *post,
-	}
-
-	// JSONに変換してレスポンスを返す
-	jsonBytes, err := json.Marshal(response)
-	if err != nil {
-		return nil, fmt.Errorf("レスポンスのJSON変換に失敗: %w", err)
-	}
-
-	return NewToolResultText(string(jsonBytes)), nil
-}
-
-// submitDailyReport は日報を投稿するハンドラー（テスト可能な依存性注入バージョン）
-func submitDailyReport(ctx context.Context, request CallToolRequest, esaClient EsaClientInterface) (*CallToolResult, error) {
-	return submitDailyReportWithTime(ctx, request, esaClient, time.Now())
-}
-
-// 後方互換性のためのラッパー
-func submitDailyReportLegacy(ctx context.Context, request CallToolRequest) (*CallToolResult, error) {
-	factory := &DefaultHandlerFactory{}
-	esaClient, err := factory.CreateEsaClient()
-	if err != nil {
-		return nil, err
-	}
-
-	return submitDailyReport(ctx, request, esaClient)
-}
-
-// submitDailyReportHandler は新しいSDK用のハンドラー
-func submitDailyReportHandler(ctx context.Context, _ *mcp.ServerSession, params *mcp.CallToolParamsFor[PostDailyReportArgs]) (*mcp.CallToolResultFor[PostDailyReportResult], error) {
-	factory := &DefaultHandlerFactory{}
-	esaClient, err := factory.CreateEsaClient()
-	if err != nil {
-		return nil, err
-	}
-
-	// 新しいAPIから古いAPIへの変換
-	oldRequest := CallToolRequest{
-		"text": params.Arguments.Text,
-	}
-
-	oldResult, err := submitDailyReport(ctx, oldRequest, esaClient)
-	if err != nil {
-		return nil, err
-	}
-
-	// レスポンスをパース
-	var response DailyReportResponse
-	if err := json.Unmarshal([]byte(oldResult.Content[0].(*TextContent).Text), &response); err != nil {
-		return nil, fmt.Errorf("failed to parse response: %w", err)
-	}
-
 	// 新しいレスポンス形式で返す
 	return &mcp.CallToolResultFor[PostDailyReportResult]{
 		StructuredContent: PostDailyReportResult{
-			Success: response.Success,
-			Message: response.Message,
-			Post:    response.Post,
+			Success: true,
+			Message: "日報を投稿しました",
+			Post:    *post,
 		},
 	}, nil
+}
+
+// submitDailyReportHandler は新しいSDK用のハンドラー
+func submitDailyReportHandler(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[PostDailyReportArgs]) (*mcp.CallToolResultFor[PostDailyReportResult], error) {
+	factory := &DefaultHandlerFactory{}
+	esaClient, err := factory.CreateEsaClient()
+	if err != nil {
+		return nil, err
+	}
+	return submitDailyReportHandlerWithTime(ctx, ss, params, esaClient, time.Now())
 }
