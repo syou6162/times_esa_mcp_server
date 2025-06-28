@@ -30,17 +30,6 @@ func main() {
 	// ツールの登録
 	s.AddTools(timesEsaTool)
 
-	// プロンプトテンプレートの定義と登録
-	// TODO: プロンプト機能を実装
-	// quickPostPrompt := mcp.NewPrompt(PromptNameQuickPost,
-	// 	mcp.WithPromptDescription(PromptDescriptionQuickPost),
-	// 	mcp.WithArgument("text",
-	// 		mcp.ArgumentDescription(ArgumentDescriptionText),
-	// 		mcp.RequiredArgument(),
-	// 	),
-	// )
-	// s.AddPrompt(quickPostPrompt, quickPostPromptHandler)
-
 	if err := s.Run(context.Background(), mcp.NewStdioTransport()); err != nil {
 		fmt.Printf("Server error: %v\n", err)
 	}
