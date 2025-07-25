@@ -34,7 +34,7 @@ func submitDailyReportWithClock(ctx context.Context, _ *mcp.ServerSession, param
 	}
 
 	// confirmed_by_userパラメータの確認
-	confirmedByUser := params.Arguments.ConfirmedByUser
+	confirmedByUser := params.ConfirmedByUser
 
 	// ユーザーによる確認が取れていない場合はエラーで停止
 	if !confirmedByUser {
