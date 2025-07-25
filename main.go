@@ -17,29 +17,25 @@ func main() {
 		nil,
 	)
 
-	// times-esaツールのスキーマ定義
-	schema := &jsonschema.Schema{
-		Type: "object",
-		Properties: map[string]*jsonschema.Schema{
-			"text": {
-				Type:        "string",
-				Description: "投稿するテキスト内容",
-			},
-			"confirmed_by_user": {
-				Type:        "boolean",
-				Description: "ユーザーが投稿内容を確認したかどうか（true: 確認済みで投稿実行）",
-			},
-		},
-		Required: []string{"text", "confirmed_by_user"},
-	}
+	// times-esaツールの定義（日報投稿用 - textパラメータとconfirmed_by_userパラメータ）
+	timesEsaTool := mcp.NewServerTool[TimesEsaPostRequest, TimesEsaPostResponse](
+		"times-esa",
+		"times-esaに日報を投稿します",
+		submitDailyReportHandler,
+		mcp.Input(
+			mcp.Property("text",
+				mcp.Description("投稿するテキスト内容"),
+				mcp.Required(true),
+			),
+			mcp.Property("confirmed_by_user",
+				mcp.Description("ユーザーが投稿内容を確認したかどうか（true: 確認済みで投稿実行）"),
+				mcp.Required(true),
+			),
+		),
+	)
 
 	// ツールの登録
-	tool := &mcp.Tool{
-		Name:        "times-esa",
-		Description: "times-esaに日報を投稿します",
-		InputSchema: schema,
-	}
-	s.AddTool(tool, submitDailyReportHandler)
+	s.AddTool(timesEsaTool)
 
 	if err := s.Run(context.Background(), mcp.NewStdioTransport()); err != nil {
 		fmt.Printf("Server error: %v\n", err)

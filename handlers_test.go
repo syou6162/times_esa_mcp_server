@@ -34,13 +34,15 @@ func TestSubmitDailyReport(t *testing.T) {
 		mockEsaClient.EXPECT().CreatePost(testText).Return(mockPost, nil)
 
 		// リクエスト作成
-		req := &TimesEsaPostRequest{
-			Text:            testText,
-			ConfirmedByUser: true,
+		params := &mcp.CallToolParamsFor[TimesEsaPostRequest]{
+			Arguments: TimesEsaPostRequest{
+				Text:            testText,
+				ConfirmedByUser: true,
+			},
 		}
 
 		// テスト対象の関数を実行
-		result, err := submitDailyReportWithClock(context.TODO(), nil, req, mockEsaClient, fixedTime)
+		result, err := submitDailyReportWithClock(context.TODO(), nil, params, mockEsaClient, fixedTime)
 
 		// 検証
 		require.NoError(t, err, "submitDailyReport should not return an error")
@@ -75,13 +77,15 @@ func TestSubmitDailyReport(t *testing.T) {
 		mockEsaClient.EXPECT().UpdatePost(existingPost, testText).Return(updatedPost, nil)
 
 		// リクエスト作成
-		req := &TimesEsaPostRequest{
-			Text:            testText,
-			ConfirmedByUser: true,
+		params := &mcp.CallToolParamsFor[TimesEsaPostRequest]{
+			Arguments: TimesEsaPostRequest{
+				Text:            testText,
+				ConfirmedByUser: true,
+			},
 		}
 
 		// テスト対象の関数を実行
-		result, err := submitDailyReportWithClock(context.TODO(), nil, req, mockEsaClient, fixedTime)
+		result, err := submitDailyReportWithClock(context.TODO(), nil, params, mockEsaClient, fixedTime)
 
 		// 検証
 		require.NoError(t, err, "submitDailyReport should not return an error")
@@ -101,13 +105,15 @@ func TestSubmitDailyReport(t *testing.T) {
 		mockEsaClient.EXPECT().SearchPostByCategory("日報/2025/05/03").Return(nil, errors.New("API接続エラー"))
 
 		// リクエスト作成
-		req := &TimesEsaPostRequest{
-			Text:            "テスト内容",
-			ConfirmedByUser: true,
+		params := &mcp.CallToolParamsFor[TimesEsaPostRequest]{
+			Arguments: TimesEsaPostRequest{
+				Text:            "テスト内容",
+				ConfirmedByUser: true,
+			},
 		}
 
 		// テスト対象の関数を実行
-		_, err := submitDailyReportWithClock(context.TODO(), nil, req, mockEsaClient, fixedTime)
+		_, err := submitDailyReportWithClock(context.TODO(), nil, params, mockEsaClient, fixedTime)
 
 		// エラーが返ることを検証
 		assert.Error(t, err)
@@ -135,18 +141,44 @@ func TestSubmitDailyReport(t *testing.T) {
 		mockEsaClient.EXPECT().CreatePost(expectedText).Return(mockPost, nil)
 
 		// リクエスト作成
-		req := &TimesEsaPostRequest{
-			Text:            inputText,
-			ConfirmedByUser: true,
+		params := &mcp.CallToolParamsFor[TimesEsaPostRequest]{
+			Arguments: TimesEsaPostRequest{
+				Text:            inputText,
+				ConfirmedByUser: true,
+			},
 		}
 
 		// テスト対象の関数を実行
-		result, err := submitDailyReportWithClock(context.TODO(), nil, req, mockEsaClient, fixedTime)
+		result, err := submitDailyReportWithClock(context.TODO(), nil, params, mockEsaClient, fixedTime)
 
 		// 検証
 		require.NoError(t, err)
 		require.NotNil(t, result)
 		assert.True(t, result.Success)
+	})
+
+	t.Run("confirmed_by_user=falseの場合のエラーテスト", func(t *testing.T) {
+		// 各テストケース前にdebounceをリセット
+		resetDebounce()
+
+		// モックの作成
+		mockEsaClient := NewMockEsaClientInterface(t)
+
+		// confirmed_by_user=falseでリクエスト作成
+		params := &mcp.CallToolParamsFor[TimesEsaPostRequest]{
+			Arguments: TimesEsaPostRequest{
+				Text:            "テスト内容",
+				ConfirmedByUser: false,
+			},
+		}
+
+		// テスト対象の関数を実行
+		_, err := submitDailyReportWithClock(context.TODO(), nil, params, mockEsaClient, fixedTime)
+
+		// エラーが返ることを検証
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "投稿前にユーザーによる内容の確認が必要です")
+		assert.Contains(t, err.Error(), "confirmed_by_user=trueを設定してください")
 	})
 
 	t.Run("空文字テスト", func(t *testing.T) {
@@ -157,13 +189,15 @@ func TestSubmitDailyReport(t *testing.T) {
 		mockEsaClient := NewMockEsaClientInterface(t)
 
 		// リクエスト作成（空文字を送信）
-		req := &TimesEsaPostRequest{
-			Text:            "",
-			ConfirmedByUser: true,
+		params := &mcp.CallToolParamsFor[TimesEsaPostRequest]{
+			Arguments: TimesEsaPostRequest{
+				Text:            "",
+				ConfirmedByUser: true,
+			},
 		}
 
 		// テスト対象の関数を実行
-		_, err := submitDailyReportWithClock(context.TODO(), nil, req, mockEsaClient, fixedTime)
+		_, err := submitDailyReportWithClock(context.TODO(), nil, params, mockEsaClient, fixedTime)
 
 		// エラーが返ることを検証
 		assert.Error(t, err)

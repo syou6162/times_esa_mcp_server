@@ -33,6 +33,14 @@ func submitDailyReportWithClock(ctx context.Context, _ *mcp.ServerSession, param
 		return nil, fmt.Errorf("text parameter cannot be empty")
 	}
 
+	// confirmed_by_userパラメータの確認
+	confirmedByUser := params.Arguments.ConfirmedByUser
+
+	// ユーザーによる確認が取れていない場合はエラーで停止
+	if !confirmedByUser {
+		return nil, fmt.Errorf("投稿前にユーザーによる内容の確認が必要です。内容の確認をユーザーに行ったら、confirmed_by_user=trueを設定してください")
+	}
+
 	// #times-esa除去（prefix自体と直後の空白のみ除去、他は一切変更しない）
 	text = stripPrefix(text, "#times-esa")
 
