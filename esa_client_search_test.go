@@ -28,7 +28,7 @@ func TestSearch_URLConstruction(t *testing.T) {
 	commonHeaders := map[string]string{
 		"Authorization": "Bearer test-token",
 	}
-	
+
 	tests := []struct {
 		name            string
 		options         []SearchOption
@@ -65,7 +65,7 @@ func TestSearch_URLConstruction(t *testing.T) {
 		{
 			name: "日付範囲検索",
 			options: []SearchOption{
-				WithDateRange("created", 
+				WithDateRange("created",
 					time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC),
 					time.Date(2024, 12, 31, 0, 0, 0, 0, time.UTC),
 				),
@@ -89,30 +89,30 @@ func TestSearch_URLConstruction(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// モックHTTPクライアントの作成
 			mockHTTPClient := NewMockHTTPClientInterface(t)
-			
+
 			// リクエストの検証
 			mockHTTPClient.EXPECT().Do(mock.MatchedBy(func(req *http.Request) bool {
 				// URLの検証
 				actualURL := req.URL.String()
-				
+
 				// クエリパラメータをパースして比較（順序に依存しない比較）
 				expectedParsed, _ := url.Parse(tt.expectedURL)
 				actualParsed, _ := url.Parse(actualURL)
-				
+
 				assert.Equal(t, expectedParsed.Scheme, actualParsed.Scheme)
 				assert.Equal(t, expectedParsed.Host, actualParsed.Host)
 				assert.Equal(t, expectedParsed.Path, actualParsed.Path)
-				
+
 				// クエリパラメータの比較
 				expectedQuery := expectedParsed.Query()
 				actualQuery := actualParsed.Query()
 				assert.Equal(t, expectedQuery, actualQuery)
-				
+
 				// ヘッダーの検証
 				for key, value := range tt.expectedHeaders {
 					assert.Equal(t, value, req.Header.Get(key))
 				}
-				
+
 				return true
 			})).Return(&http.Response{
 				StatusCode: 200,
@@ -131,7 +131,7 @@ func TestSearch_URLConstruction(t *testing.T) {
 				AccessToken: "test-token",
 			}
 			client := NewEsaClient(mockHTTPClient, config)
-			
+
 			_, err := client.Search(tt.options...)
 			assert.NoError(t, err)
 		})
@@ -209,11 +209,11 @@ func TestSearch_QueryConstruction(t *testing.T) {
 				sort:    "updated",
 				order:   "desc",
 			}
-			
+
 			for _, opt := range tt.options {
 				opt(config)
 			}
-			
+
 			// カテゴリークエリと通常クエリを結合してチェック
 			var actualQuery string
 			if config.categoryQuery != "" && config.query != "" {
@@ -223,7 +223,7 @@ func TestSearch_QueryConstruction(t *testing.T) {
 			} else {
 				actualQuery = config.query
 			}
-			
+
 			assert.Equal(t, tt.expectedQuery, actualQuery)
 		})
 	}
@@ -232,8 +232,8 @@ func TestSearch_QueryConstruction(t *testing.T) {
 // TestSearch_CategoryOverwrite はカテゴリーオプションの上書き動作を検証する
 func TestSearch_CategoryOverwrite(t *testing.T) {
 	tests := []struct {
-		name                 string
-		options              []SearchOption
+		name                  string
+		options               []SearchOption
 		expectedCategoryQuery string
 	}{
 		{
@@ -275,11 +275,11 @@ func TestSearch_CategoryOverwrite(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			config := &searchConfig{}
-			
+
 			for _, opt := range tt.options {
 				opt(config)
 			}
-			
+
 			assert.Equal(t, tt.expectedCategoryQuery, config.categoryQuery)
 		})
 	}
@@ -289,7 +289,7 @@ func TestSearch_CategoryOverwrite(t *testing.T) {
 func TestSearchPostByCategory_BackwardCompatibility(t *testing.T) {
 	// モックHTTPクライアントの作成
 	mockHTTPClient := NewMockHTTPClientInterface(t)
-	
+
 	// 単一の結果を返すケース
 	mockHTTPClient.EXPECT().Do(mock.Anything).Return(&http.Response{
 		StatusCode: 200,
@@ -311,7 +311,7 @@ func TestSearchPostByCategory_BackwardCompatibility(t *testing.T) {
 		AccessToken: "test-token",
 	}
 	client := NewEsaClient(mockHTTPClient, config)
-	
+
 	post, err := client.SearchPostByCategory("日報/2024/12/20")
 	assert.NoError(t, err)
 	assert.NotNil(t, post)
@@ -337,9 +337,9 @@ func TestSearch_ErrorHandling(t *testing.T) {
 			expectedError: "unauthorized: Invalid access token",
 		},
 		{
-			name:       "不正なJSONレスポンス",
-			statusCode: 200,
-			responseBody: `{invalid json`,
+			name:          "不正なJSONレスポンス",
+			statusCode:    200,
+			responseBody:  `{invalid json`,
 			expectedError: "検索結果の解析に失敗",
 		},
 	}
@@ -347,7 +347,7 @@ func TestSearch_ErrorHandling(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockHTTPClient := NewMockHTTPClientInterface(t)
-			
+
 			mockHTTPClient.EXPECT().Do(mock.Anything).Return(&http.Response{
 				StatusCode: tt.statusCode,
 				Body:       io.NopCloser(strings.NewReader(tt.responseBody)),
@@ -358,7 +358,7 @@ func TestSearch_ErrorHandling(t *testing.T) {
 				AccessToken: "test-token",
 			}
 			client := NewEsaClient(mockHTTPClient, config)
-			
+
 			_, err := client.Search()
 			assert.Error(t, err)
 			assert.Contains(t, err.Error(), tt.expectedError)
@@ -369,7 +369,7 @@ func TestSearch_ErrorHandling(t *testing.T) {
 // TestSearch_NetworkError はネットワークエラーを検証する
 func TestSearch_NetworkError(t *testing.T) {
 	mockHTTPClient := NewMockHTTPClientInterface(t)
-	
+
 	mockHTTPClient.EXPECT().Do(mock.Anything).Return(nil, fmt.Errorf("network error"))
 
 	config := EsaConfig{
@@ -377,7 +377,7 @@ func TestSearch_NetworkError(t *testing.T) {
 		AccessToken: "test-token",
 	}
 	client := NewEsaClient(mockHTTPClient, config)
-	
+
 	_, err := client.Search()
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "network error")
