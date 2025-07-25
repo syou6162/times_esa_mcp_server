@@ -13,12 +13,16 @@ func main() {
 		"1.0.0",
 	)
 
-	// times-esaツールの定義（日報投稿用 - textパラメータのみに簡略化）
+	// times-esaツールの定義（日報投稿用 - textパラメータとconfirmed_by_userパラメータ）
 	timesEsaTool := mcp.NewTool("times-esa",
 		mcp.WithDescription("times-esaに日報を投稿します"),
 		mcp.WithString("text",
 			mcp.Required(),
 			mcp.Description("投稿するテキスト内容"),
+		),
+		mcp.WithBoolean("confirmed_by_user",
+			mcp.Required(),
+			mcp.Description("ユーザーが投稿内容を確認したかどうか（true: 確認済みで投稿実行）"),
 		),
 	)
 
@@ -28,7 +32,7 @@ func main() {
 	// プロンプトテンプレートの定義と登録
 	quickPostPrompt := mcp.NewPrompt(PromptNameQuickPost,
 		mcp.WithPromptDescription(PromptDescriptionQuickPost),
-		mcp.WithArgument("text", 
+		mcp.WithArgument("text",
 			mcp.ArgumentDescription(ArgumentDescriptionText),
 			mcp.RequiredArgument(),
 		),

@@ -38,7 +38,8 @@ func TestSubmitDailyReport(t *testing.T) {
 		// リクエスト作成
 		req := mcp.CallToolRequest{}
 		req.Params.Arguments = map[string]any{
-			"text": testText,
+			"text":              testText,
+			"confirmed_by_user": true,
 		}
 		// テスト対象の関数を実行
 		result, err := submitDailyReportWithTime(context.TODO(), req, mockEsaClient, fixedTime)
@@ -85,7 +86,8 @@ func TestSubmitDailyReport(t *testing.T) {
 		// リクエスト作成
 		req := mcp.CallToolRequest{}
 		req.Params.Arguments = map[string]any{
-			"text": testText,
+			"text":              testText,
+			"confirmed_by_user": true,
 		}
 
 		// テスト対象の関数を実行
@@ -118,7 +120,8 @@ func TestSubmitDailyReport(t *testing.T) {
 		// リクエスト作成
 		req := mcp.CallToolRequest{}
 		req.Params.Arguments = map[string]any{
-			"text": "テスト内容",
+			"text":              "テスト内容",
+			"confirmed_by_user": true,
 		}
 		// テスト対象の関数を実行
 		_, err := submitDailyReportWithTime(context.TODO(), req, mockEsaClient, fixedTime)
@@ -151,7 +154,8 @@ func TestSubmitDailyReport(t *testing.T) {
 		// リクエスト作成
 		req := mcp.CallToolRequest{}
 		req.Params.Arguments = map[string]any{
-			"text": inputText,
+			"text":              inputText,
+			"confirmed_by_user": true,
 		}
 
 		// テスト対象の関数を実行
@@ -161,6 +165,29 @@ func TestSubmitDailyReport(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, result)
 		require.Len(t, result.Content, 1)
+	})
+
+	t.Run("confirmed_by_user=falseの場合のエラーテスト", func(t *testing.T) {
+		// 各テストケース前にdebounceをリセット
+		resetDebounce()
+
+		// モックの作成
+		mockEsaClient := NewMockEsaClientInterface(t)
+
+		// confirmed_by_user=falseでリクエスト作成
+		req := mcp.CallToolRequest{}
+		req.Params.Arguments = map[string]any{
+			"text":              "テスト内容",
+			"confirmed_by_user": false,
+		}
+
+		// テスト対象の関数を実行
+		_, err := submitDailyReportWithTime(context.TODO(), req, mockEsaClient, fixedTime)
+
+		// エラーが返ることを検証
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "投稿前にユーザーによる内容の確認が必要です")
+		assert.Contains(t, err.Error(), "confirmed_by_user=trueを設定してください")
 	})
 
 	t.Run("引数不正テスト", func(t *testing.T) {

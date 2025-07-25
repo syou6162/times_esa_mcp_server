@@ -31,6 +31,17 @@ func submitDailyReportWithTime(_ context.Context, request mcp.CallToolRequest, e
 		return nil, fmt.Errorf("text parameter is required: %w", err)
 	}
 
+	// confirmed_by_userパラメータの確認
+	confirmedByUser, err := request.RequireBool("confirmed_by_user")
+	if err != nil {
+		return nil, fmt.Errorf("confirmed_by_user parameter is required: %w", err)
+	}
+
+	// ユーザーによる確認が取れていない場合はエラーで停止
+	if !confirmedByUser {
+		return nil, fmt.Errorf("投稿前にユーザーによる内容の確認が必要です。内容の確認をユーザーに行ったら、confirmed_by_user=trueを設定してください")
+	}
+
 	// #times-esa除去（prefix自体と直後の空白のみ除去、他は一切変更しない）
 	text = stripPrefix(text, "#times-esa")
 
