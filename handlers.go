@@ -23,10 +23,10 @@ func (f *DefaultHandlerFactory) CreateEsaClient() (EsaClientInterface, error) {
 }
 
 // submitDailyReportWithClock は日報を投稿するハンドラー（時間指定可能、テスト用）
-func submitDailyReportWithClock(ctx context.Context, _ *mcp.ServerSession, params *mcp.CallToolParamsFor[TimesEsaPostRequest], esaClient EsaClientInterface, now time.Time) (*mcp.CallToolResultFor[TimesEsaPostResponse], error) {
+func submitDailyReportWithClock(ctx context.Context, _ *mcp.ServerSession, params *TimesEsaPostRequest, esaClient EsaClientInterface, now time.Time) (*TimesEsaPostResponse, error) {
 
 	// パラメーターの取得
-	text := params.Arguments.Text
+	text := params.Text
 
 	// 空文字チェック
 	if text == "" {
@@ -68,21 +68,43 @@ func submitDailyReportWithClock(ctx context.Context, _ *mcp.ServerSession, param
 	}
 
 	// レスポンスを返す
-	return &mcp.CallToolResultFor[TimesEsaPostResponse]{
-		StructuredContent: TimesEsaPostResponse{
-			Success: true,
-			Message: "日報を投稿しました",
-			Post:    *post,
-		},
+	return &TimesEsaPostResponse{
+		Success: true,
+		Message: "日報を投稿しました",
+		Post:    *post,
 	}, nil
 }
 
 // submitDailyReportHandler は日報を投稿するハンドラー
-func submitDailyReportHandler(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[TimesEsaPostRequest]) (*mcp.CallToolResultFor[TimesEsaPostResponse], error) {
+func submitDailyReportHandler(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[map[string]any]) (*mcp.CallToolResultFor[any], error) {
+	// パラメーターから値を抽出
+	text, ok := params.Arguments["text"].(string)
+	if !ok {
+		return nil, fmt.Errorf("text parameter is required and must be a string")
+	}
+
+	confirmedByUser, ok := params.Arguments["confirmed_by_user"].(bool)
+	if !ok {
+		return nil, fmt.Errorf("confirmed_by_user parameter is required and must be a boolean")
+	}
+
+	req := &TimesEsaPostRequest{
+		Text:            text,
+		ConfirmedByUser: confirmedByUser,
+	}
+
 	factory := &DefaultHandlerFactory{}
 	esaClient, err := factory.CreateEsaClient()
 	if err != nil {
 		return nil, err
 	}
-	return submitDailyReportWithClock(ctx, ss, params, esaClient, time.Now())
+
+	result, err := submitDailyReportWithClock(ctx, ss, req, esaClient, time.Now())
+	if err != nil {
+		return nil, err
+	}
+
+	return &mcp.CallToolResultFor[any]{
+		StructuredContent: result,
+	}, nil
 }
