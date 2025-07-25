@@ -2,12 +2,11 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"testing"
 	"time"
 
-	"github.com/mark3labs/mcp-go/mcp"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -36,27 +35,22 @@ func TestSubmitDailyReport(t *testing.T) {
 		mockEsaClient.EXPECT().CreatePost(testText).Return(mockPost, nil)
 
 		// リクエスト作成
-		req := mcp.CallToolRequest{}
-		req.Params.Arguments = map[string]any{
-			"text":              testText,
-			"confirmed_by_user": true,
+		params := &mcp.CallToolParamsFor[TimesEsaPostRequest]{
+			Arguments: TimesEsaPostRequest{
+				Text:            testText,
+				ConfirmedByUser: true,
+			},
 		}
+
 		// テスト対象の関数を実行
-		result, err := submitDailyReportWithTime(context.TODO(), req, mockEsaClient, fixedTime)
+		result, err := submitDailyReportWithClock(context.TODO(), nil, params, mockEsaClient, fixedTime)
 
 		// 検証
 		require.NoError(t, err, "submitDailyReport should not return an error")
 		require.NotNil(t, result, "submitDailyReport should return a result")
-		require.Len(t, result.Content, 1, "Result should contain one content item")
-		require.IsType(t, mcp.TextContent{}, result.Content[0], "Content item should be TextContent")
-
-		// レスポンスのJSONをパースして内容を検証
-		textContent := result.Content[0].(mcp.TextContent).Text
-		var response DailyReportResponse
-		err = json.Unmarshal([]byte(textContent), &response)
-		assert.NoError(t, err)
-		assert.True(t, response.Success)
-		assert.Contains(t, response.Message, "日報を投稿しました")
+		assert.True(t, result.StructuredContent.Success)
+		assert.Contains(t, result.StructuredContent.Message, "日報を投稿しました")
+		assert.Equal(t, mockPost.Number, result.StructuredContent.Post.Number)
 	})
 
 	t.Run("既存投稿更新テスト", func(t *testing.T) {
@@ -84,27 +78,21 @@ func TestSubmitDailyReport(t *testing.T) {
 		mockEsaClient.EXPECT().UpdatePost(existingPost, testText).Return(updatedPost, nil)
 
 		// リクエスト作成
-		req := mcp.CallToolRequest{}
-		req.Params.Arguments = map[string]any{
-			"text":              testText,
-			"confirmed_by_user": true,
+		params := &mcp.CallToolParamsFor[TimesEsaPostRequest]{
+			Arguments: TimesEsaPostRequest{
+				Text:            testText,
+				ConfirmedByUser: true,
+			},
 		}
 
 		// テスト対象の関数を実行
-		result, err := submitDailyReportWithTime(context.TODO(), req, mockEsaClient, fixedTime)
+		result, err := submitDailyReportWithClock(context.TODO(), nil, params, mockEsaClient, fixedTime)
 
 		// 検証
 		require.NoError(t, err, "submitDailyReport should not return an error")
 		require.NotNil(t, result, "submitDailyReport should return a result")
-		require.Len(t, result.Content, 1, "Result should contain one content item")
-		require.IsType(t, mcp.TextContent{}, result.Content[0], "Content item should be TextContent")
-
-		textContent := result.Content[0].(mcp.TextContent).Text
-		var response DailyReportResponse
-		err = json.Unmarshal([]byte(textContent), &response)
-		assert.NoError(t, err)
-		assert.True(t, response.Success)
-		assert.Contains(t, response.Message, "日報を投稿しました")
+		assert.True(t, result.StructuredContent.Success)
+		assert.Contains(t, result.StructuredContent.Message, "日報を投稿しました")
 	})
 
 	t.Run("検索エラーテスト", func(t *testing.T) {
@@ -118,13 +106,15 @@ func TestSubmitDailyReport(t *testing.T) {
 		mockEsaClient.EXPECT().SearchPostByCategory("日報/2025/05/03").Return(nil, errors.New("API接続エラー"))
 
 		// リクエスト作成
-		req := mcp.CallToolRequest{}
-		req.Params.Arguments = map[string]any{
-			"text":              "テスト内容",
-			"confirmed_by_user": true,
+		params := &mcp.CallToolParamsFor[TimesEsaPostRequest]{
+			Arguments: TimesEsaPostRequest{
+				Text:            "テスト内容",
+				ConfirmedByUser: true,
+			},
 		}
+
 		// テスト対象の関数を実行
-		_, err := submitDailyReportWithTime(context.TODO(), req, mockEsaClient, fixedTime)
+		_, err := submitDailyReportWithClock(context.TODO(), nil, params, mockEsaClient, fixedTime)
 
 		// エラーが返ることを検証
 		assert.Error(t, err)
@@ -152,19 +142,20 @@ func TestSubmitDailyReport(t *testing.T) {
 		mockEsaClient.EXPECT().CreatePost(expectedText).Return(mockPost, nil)
 
 		// リクエスト作成
-		req := mcp.CallToolRequest{}
-		req.Params.Arguments = map[string]any{
-			"text":              inputText,
-			"confirmed_by_user": true,
+		params := &mcp.CallToolParamsFor[TimesEsaPostRequest]{
+			Arguments: TimesEsaPostRequest{
+				Text:            inputText,
+				ConfirmedByUser: true,
+			},
 		}
 
 		// テスト対象の関数を実行
-		result, err := submitDailyReportWithTime(context.TODO(), req, mockEsaClient, fixedTime)
+		result, err := submitDailyReportWithClock(context.TODO(), nil, params, mockEsaClient, fixedTime)
 
 		// 検証
 		require.NoError(t, err)
 		require.NotNil(t, result)
-		require.Len(t, result.Content, 1)
+		assert.True(t, result.StructuredContent.Success)
 	})
 
 	t.Run("confirmed_by_user=falseの場合のエラーテスト", func(t *testing.T) {
@@ -175,14 +166,15 @@ func TestSubmitDailyReport(t *testing.T) {
 		mockEsaClient := NewMockEsaClientInterface(t)
 
 		// confirmed_by_user=falseでリクエスト作成
-		req := mcp.CallToolRequest{}
-		req.Params.Arguments = map[string]any{
-			"text":              "テスト内容",
-			"confirmed_by_user": false,
+		params := &mcp.CallToolParamsFor[TimesEsaPostRequest]{
+			Arguments: TimesEsaPostRequest{
+				Text:            "テスト内容",
+				ConfirmedByUser: false,
+			},
 		}
 
 		// テスト対象の関数を実行
-		_, err := submitDailyReportWithTime(context.TODO(), req, mockEsaClient, fixedTime)
+		_, err := submitDailyReportWithClock(context.TODO(), nil, params, mockEsaClient, fixedTime)
 
 		// エラーが返ることを検証
 		assert.Error(t, err)
@@ -190,24 +182,26 @@ func TestSubmitDailyReport(t *testing.T) {
 		assert.Contains(t, err.Error(), "confirmed_by_user=trueを設定してください")
 	})
 
-	t.Run("引数不正テスト", func(t *testing.T) {
+	t.Run("空文字テスト", func(t *testing.T) {
 		// 各テストケース前にdebounceをリセット
 		resetDebounce()
 
 		// モックの作成
 		mockEsaClient := NewMockEsaClientInterface(t)
 
-		// text引数が文字列でない場合
-		req := mcp.CallToolRequest{}
-		req.Params.Arguments = map[string]any{
-			"text": 123, // 文字列ではなく数値
+		// リクエスト作成（空文字を送信）
+		params := &mcp.CallToolParamsFor[TimesEsaPostRequest]{
+			Arguments: TimesEsaPostRequest{
+				Text:            "",
+				ConfirmedByUser: true,
+			},
 		}
 
 		// テスト対象の関数を実行
-		_, err := submitDailyReportWithTime(context.TODO(), req, mockEsaClient, fixedTime)
+		_, err := submitDailyReportWithClock(context.TODO(), nil, params, mockEsaClient, fixedTime)
 
 		// エラーが返ることを検証
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "text parameter is required")
+		assert.Contains(t, err.Error(), "empty")
 	})
 }
