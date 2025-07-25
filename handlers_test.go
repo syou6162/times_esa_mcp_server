@@ -37,7 +37,8 @@ func TestSubmitDailyReport(t *testing.T) {
 		// リクエスト作成
 		params := &mcp.CallToolParamsFor[TimesEsaPostRequest]{
 			Arguments: TimesEsaPostRequest{
-				Text: testText,
+				Text:            testText,
+				ConfirmedByUser: true,
 			},
 		}
 
@@ -79,7 +80,8 @@ func TestSubmitDailyReport(t *testing.T) {
 		// リクエスト作成
 		params := &mcp.CallToolParamsFor[TimesEsaPostRequest]{
 			Arguments: TimesEsaPostRequest{
-				Text: testText,
+				Text:            testText,
+				ConfirmedByUser: true,
 			},
 		}
 
@@ -106,7 +108,8 @@ func TestSubmitDailyReport(t *testing.T) {
 		// リクエスト作成
 		params := &mcp.CallToolParamsFor[TimesEsaPostRequest]{
 			Arguments: TimesEsaPostRequest{
-				Text: "テスト内容",
+				Text:            "テスト内容",
+				ConfirmedByUser: true,
 			},
 		}
 
@@ -141,7 +144,8 @@ func TestSubmitDailyReport(t *testing.T) {
 		// リクエスト作成
 		params := &mcp.CallToolParamsFor[TimesEsaPostRequest]{
 			Arguments: TimesEsaPostRequest{
-				Text: inputText,
+				Text:            inputText,
+				ConfirmedByUser: true,
 			},
 		}
 
@@ -154,6 +158,30 @@ func TestSubmitDailyReport(t *testing.T) {
 		assert.True(t, result.StructuredContent.Success)
 	})
 
+	t.Run("confirmed_by_user=falseの場合のエラーテスト", func(t *testing.T) {
+		// 各テストケース前にdebounceをリセット
+		resetDebounce()
+
+		// モックの作成
+		mockEsaClient := NewMockEsaClientInterface(t)
+
+		// confirmed_by_user=falseでリクエスト作成
+		params := &mcp.CallToolParamsFor[TimesEsaPostRequest]{
+			Arguments: TimesEsaPostRequest{
+				Text:            "テスト内容",
+				ConfirmedByUser: false,
+			},
+		}
+
+		// テスト対象の関数を実行
+		_, err := submitDailyReportWithClock(context.TODO(), nil, params, mockEsaClient, fixedTime)
+
+		// エラーが返ることを検証
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "投稿前にユーザーによる内容の確認が必要です")
+		assert.Contains(t, err.Error(), "confirmed_by_user=trueを設定してください")
+	})
+
 	t.Run("空文字テスト", func(t *testing.T) {
 		// 各テストケース前にdebounceをリセット
 		resetDebounce()
@@ -164,7 +192,8 @@ func TestSubmitDailyReport(t *testing.T) {
 		// リクエスト作成（空文字を送信）
 		params := &mcp.CallToolParamsFor[TimesEsaPostRequest]{
 			Arguments: TimesEsaPostRequest{
-				Text: "",
+				Text:            "",
+				ConfirmedByUser: true,
 			},
 		}
 

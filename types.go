@@ -1,7 +1,8 @@
 package main
 
 type TimesEsaPostRequest struct {
-	Text string `json:"text"`
+	Text            string `json:"text"`
+	ConfirmedByUser bool   `json:"confirmed_by_user"`
 }
 
 type TimesEsaPostResponse struct {
