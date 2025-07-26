@@ -113,6 +113,11 @@ func submitDailyReportHandler(ctx context.Context, ss *mcp.ServerSession, params
 	}
 
 	return &mcp.CallToolResultFor[any]{
+		Content: []mcp.Content{
+			&mcp.TextContent{
+				Text: result.Message,
+			},
+		},
 		StructuredContent: result,
 	}, nil
 }
