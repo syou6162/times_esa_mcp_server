@@ -43,14 +43,14 @@ func TestSubmitDailyReport(t *testing.T) {
 		}
 
 		// テスト対象の関数を実行
-		result, err := submitDailyReportWithClock(context.TODO(), nil, params, mockEsaClient, fixedTime)
+		result, err := submitDailyReportWithClock(context.TODO(), nil, &params.Arguments, mockEsaClient, fixedTime)
 
 		// 検証
 		require.NoError(t, err, "submitDailyReport should not return an error")
 		require.NotNil(t, result, "submitDailyReport should return a result")
-		assert.True(t, result.StructuredContent.Success)
-		assert.Contains(t, result.StructuredContent.Message, "日報を投稿しました")
-		assert.Equal(t, mockPost.Number, result.StructuredContent.Post.Number)
+		assert.True(t, result.Success)
+		assert.Contains(t, result.Message, "日報を投稿しました")
+		assert.Equal(t, mockPost.Number, result.Post.Number)
 	})
 
 	t.Run("既存投稿更新テスト", func(t *testing.T) {
@@ -86,13 +86,13 @@ func TestSubmitDailyReport(t *testing.T) {
 		}
 
 		// テスト対象の関数を実行
-		result, err := submitDailyReportWithClock(context.TODO(), nil, params, mockEsaClient, fixedTime)
+		result, err := submitDailyReportWithClock(context.TODO(), nil, &params.Arguments, mockEsaClient, fixedTime)
 
 		// 検証
 		require.NoError(t, err, "submitDailyReport should not return an error")
 		require.NotNil(t, result, "submitDailyReport should return a result")
-		assert.True(t, result.StructuredContent.Success)
-		assert.Contains(t, result.StructuredContent.Message, "日報を投稿しました")
+		assert.True(t, result.Success)
+		assert.Contains(t, result.Message, "日報を投稿しました")
 	})
 
 	t.Run("検索エラーテスト", func(t *testing.T) {
@@ -114,7 +114,7 @@ func TestSubmitDailyReport(t *testing.T) {
 		}
 
 		// テスト対象の関数を実行
-		_, err := submitDailyReportWithClock(context.TODO(), nil, params, mockEsaClient, fixedTime)
+		_, err := submitDailyReportWithClock(context.TODO(), nil, &params.Arguments, mockEsaClient, fixedTime)
 
 		// エラーが返ることを検証
 		assert.Error(t, err)
@@ -150,12 +150,12 @@ func TestSubmitDailyReport(t *testing.T) {
 		}
 
 		// テスト対象の関数を実行
-		result, err := submitDailyReportWithClock(context.TODO(), nil, params, mockEsaClient, fixedTime)
+		result, err := submitDailyReportWithClock(context.TODO(), nil, &params.Arguments, mockEsaClient, fixedTime)
 
 		// 検証
 		require.NoError(t, err)
 		require.NotNil(t, result)
-		assert.True(t, result.StructuredContent.Success)
+		assert.True(t, result.Success)
 	})
 
 	t.Run("confirmed_by_user=falseの場合のエラーテスト", func(t *testing.T) {
@@ -174,7 +174,7 @@ func TestSubmitDailyReport(t *testing.T) {
 		}
 
 		// テスト対象の関数を実行
-		_, err := submitDailyReportWithClock(context.TODO(), nil, params, mockEsaClient, fixedTime)
+		_, err := submitDailyReportWithClock(context.TODO(), nil, &params.Arguments, mockEsaClient, fixedTime)
 
 		// エラーが返ることを検証
 		assert.Error(t, err)
@@ -198,7 +198,7 @@ func TestSubmitDailyReport(t *testing.T) {
 		}
 
 		// テスト対象の関数を実行
-		_, err := submitDailyReportWithClock(context.TODO(), nil, params, mockEsaClient, fixedTime)
+		_, err := submitDailyReportWithClock(context.TODO(), nil, &params.Arguments, mockEsaClient, fixedTime)
 
 		// エラーが返ることを検証
 		assert.Error(t, err)
