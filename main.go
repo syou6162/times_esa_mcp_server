@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/google/jsonschema-go/jsonschema"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -41,7 +41,7 @@ func main() {
 	}
 	mcp.AddTool(s, tool, submitDailyReportHandler)
 
-	if err := s.Run(context.Background(), mcp.NewStdioTransport()); err != nil {
+	if err := s.Run(context.Background(), &mcp.StdioTransport{}); err != nil {
 		fmt.Printf("Server error: %v\n", err)
 	}
 }

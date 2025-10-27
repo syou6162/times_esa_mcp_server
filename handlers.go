@@ -84,40 +84,23 @@ func submitDailyReportWithClock(ctx context.Context, _ *mcp.ServerSession, param
 }
 
 // submitDailyReportHandler は日報を投稿するハンドラー
-func submitDailyReportHandler(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[map[string]any]) (*mcp.CallToolResultFor[any], error) {
-	// パラメーターから値を抽出
-	text, ok := params.Arguments["text"].(string)
-	if !ok {
-		return nil, fmt.Errorf("text parameter is required and must be a string")
-	}
-
-	confirmedByUser, ok := params.Arguments["confirmed_by_user"].(bool)
-	if !ok {
-		return nil, fmt.Errorf("confirmed_by_user parameter is required and must be a boolean")
-	}
-
-	req := &TimesEsaPostRequest{
-		Text:            text,
-		ConfirmedByUser: confirmedByUser,
-	}
-
+func submitDailyReportHandler(ctx context.Context, req *mcp.CallToolRequest, params TimesEsaPostRequest) (*mcp.CallToolResult, any, error) {
 	factory := &DefaultHandlerFactory{}
 	esaClient, err := factory.CreateEsaClient()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	result, err := submitDailyReportWithClock(ctx, ss, req, esaClient, time.Now())
+	result, err := submitDailyReportWithClock(ctx, nil, &params, esaClient, time.Now())
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return &mcp.CallToolResultFor[any]{
+	return &mcp.CallToolResult{
 		Content: []mcp.Content{
 			&mcp.TextContent{
 				Text: result.Message,
 			},
 		},
-		StructuredContent: result,
-	}, nil
+	}, result, nil
 }
